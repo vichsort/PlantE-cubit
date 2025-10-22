@@ -1,41 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+// import 'package:flutter_bloc/flutter_bloc.dart';
 
-// --- Importe suas Telas (Screens) ---
-// (Crie arquivos vazios para elas por enquanto, se ainda não existirem)
+// telas --
+import 'presentation/splash_screen.dart';
+import 'presentation/main_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/garden/screens/garden_screen.dart';
 import 'features/plant_detail/screens/plant_detail_screen.dart';
 
-// --- Importe Cubits e Serviços necessários para prover nas rotas ---
-// (Importe quando precisar passar dependências ou criar Cubits específicos da rota)
-// import 'features/plant_detail/cubit/plant_detail_cubit.dart';
-// import 'core/network/api_service.dart'; // Exemplo
-// import 'features/garden/services/garden_service.dart'; // Exemplo
-
 class AppRouter {
-  // --- (Opcional) Instanciar serviços aqui se não usar Injeção de Dependência ---
-  // final ApiService apiService = ApiService();
-  // final GardenService gardenService = GardenService(apiService); // Exemplo
-
-  /// Gera rotas com base no nome da rota solicitada ([settings.name]).
   Route? onGenerateRoute(RouteSettings settings) {
     print("Navegando para: ${settings.name} com args: ${settings.arguments}"); // Para debug
 
     switch (settings.name) {
       case '/':
-      // A rota raiz '/' pode redirecionar ou ser uma tela específica.
-      // A lógica no main.dart (ou um SplashScreen) decidirá se vai para '/login' ou '/garden'.
-      // Por segurança, podemos direcionar para login se a rota raiz for chamada diretamente.
-      // Ou retornar null e deixar o 'home' do MaterialApp decidir (se definido).
-        return MaterialPageRoute(builder: (_) => const LoginScreen()); // Ou GardenScreen, ou SplashScreen
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
 
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
 
       case '/register':
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+
+      case '/main':
+        return MaterialPageRoute(builder: (_) => const MainScreen());
 
       case '/garden': // Nossa tela principal (Home)
         // Aqui não precisamos passar argumentos, mas se o GardenCubit
