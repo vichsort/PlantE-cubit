@@ -29,8 +29,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       context.read<AuthCubit>().login(email, password);
-    } else {
-      print("Formulário inválido"); // Para debug
     }
   }
 

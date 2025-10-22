@@ -20,7 +20,6 @@ class AuthCubit extends Cubit<AuthState> {
       }
     } catch (e) {
       // Se houver erro ao ler o token (raro), assume deslogado
-      print("AuthCubit: Error checking auth status - $e");
       emit(Unauthenticated());
     }
   }
@@ -61,8 +60,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _authService.logout();
       emit(Unauthenticated());
     } catch (e) {
-      // Mesmo se o logout falhar (raro), desloga localmente
-      print("AuthCubit: Error during logout, but emitting Unauthenticated - $e");
+      // Mesmo se o logout falhar, desloga localmente
       emit(Unauthenticated());
     }
   }

@@ -32,8 +32,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       context.read<AuthCubit>().register(email, password);
-    } else {
-      print("Formulário de registro inválido");
     }
   }
 
@@ -43,7 +41,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } else {
       Navigator.of(context).pushReplacementNamed('/login');
     }
-     print('Navegar para Login');
   }
 
   @override
