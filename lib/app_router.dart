@@ -56,8 +56,6 @@ class AppRouter {
           return _errorRoute(message: 'ID da planta inválido ou ausente.');
         }
 
-      // Adicione outras rotas aqui (ex: '/settings')
-
       default:
         // Rota não encontrada
         print("Erro de Roteamento: Rota desconhecida: ${settings.name}");
