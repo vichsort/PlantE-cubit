@@ -1,7 +1,7 @@
 
 import 'package:plante/core/network/api_service.dart';
 import 'package:plante/core/storage/secure_storage_service.dart';
-import '../../../core/error/api_exception.dart';
+import 'package:plante/core/error/api_exception.dart';
 
 class AuthService {
   final ApiService _apiService;

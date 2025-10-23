@@ -108,8 +108,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       labelText: 'Senha',
                       validator: (value) {
-                        if (value == null || value.isEmpty)
+                        if (value == null || value.isEmpty) {
                           return 'Senha obrigatória.';
+                        }
                         return null;
                       },
                       textInputAction: TextInputAction.done,
