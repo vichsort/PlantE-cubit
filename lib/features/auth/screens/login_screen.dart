@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubit/auth_cubit.dart';
-import '../cubit/auth_state.dart';
+// -- Cubits --
+import 'package:plante/features/auth/cubit/auth_cubit.dart';
+import 'package:plante/features/auth/cubit/auth_state.dart';
+
+// -- Widgets --
+import 'package:plante/features/auth/widgets/email_form_field.dart';
+import 'package:plante/features/auth/widgets/password_form_field.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,7 +20,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
 
   @override
   void dispose() {
@@ -58,7 +62,10 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -90,59 +97,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 40),
 
                     // --- Campo de Email ---
-                    TextFormField(
+                    EmailFormField(
                       controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.alternate_email, color: colorScheme.onSurfaceVariant),
-                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                         focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12.0),
-                           borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                         ),
-                         filled: true,
-                         fillColor: colorScheme.surfaceContainerHighest,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Por favor, insira seu email.';
-                        }
-                        if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) {
-                           return 'Por favor, insira um email válido.';
-                        }
-                        return null;
-                      },
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 16),
 
                     // --- Campo de Senha ---
-                    TextFormField(
+                    PasswordFormField(
                       controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Senha',
-                        prefixIcon: Icon(Icons.lock_outline, color: colorScheme.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                        focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12.0),
-                           borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                         ),
-                        filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
+                      labelText: 'Senha',
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor, insira sua senha.';
-                        }
+                        if (value == null || value.isEmpty)
+                          return 'Senha obrigatória.';
                         return null;
                       },
                       textInputAction: TextInputAction.done,
@@ -170,12 +137,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                   width: 24,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 3,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
                                   ),
                                 )
                               : const Text(
                                   'ENTRAR',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                         );
                       },

@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../cubit/auth_cubit.dart';
-import '../cubit/auth_state.dart';
+// -- Cubits --
+import 'package:plante/features/auth/cubit/auth_cubit.dart';
+import 'package:plante/features/auth/cubit/auth_state.dart';
+
+// -- Widgets --
+import 'package:plante/features/auth/widgets/email_form_field.dart';
+import 'package:plante/features/auth/widgets/password_form_field.dart';
+import 'package:plante/features/auth/widgets/confirm_password_form_field.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,8 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  bool _obscurePassword = true;
-  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -37,7 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _navigateToLogin() {
     if (Navigator.of(context).canPop()) {
-       Navigator.of(context).pop();
+      Navigator.of(context).pop();
     } else {
       Navigator.of(context).pushReplacementNamed('/login');
     }
@@ -64,20 +68,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 backgroundColor: colorScheme.error,
               ),
             );
-          } else if (state is Unauthenticated && ModalRoute.of(context)?.isCurrent == true) {
-             ScaffoldMessenger.of(context).showSnackBar(
+          } else if (state is Unauthenticated &&
+              ModalRoute.of(context)?.isCurrent == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: const Text('Conta criada com sucesso! Faça o login.'),
                 backgroundColor: colorScheme.primary,
               ),
             );
-             _navigateToLogin();
+            _navigateToLogin();
           }
         },
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 16.0,
+              ),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -101,87 +109,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 32),
 
                     // --- Campo de Email ---
-                    TextFormField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                       decoration: InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.alternate_email, color: colorScheme.onSurfaceVariant),
-                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                         focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12.0),
-                           borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                         ),
-                         filled: true,
-                         fillColor: colorScheme.surfaceContainerHighest,
-                      ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) return 'Email obrigatório.';
-                        if (!RegExp(r'\S+@\S+\.\S+').hasMatch(value)) return 'Email inválido.';
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
+                    EmailFormField(
+                    controller: _emailController,
+                    textInputAction: TextInputAction.next,
+                  ),
                     const SizedBox(height: 16),
 
                     // --- Campo de Senha ---
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                       decoration: InputDecoration(
-                        labelText: 'Senha',
-                        prefixIcon: Icon(Icons.lock_outline, color: colorScheme.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                        focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12.0),
-                           borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                         ),
-                        filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                             color: colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Senha obrigatória.';
-                        if (value.length < 6) return 'Senha deve ter no mínimo 6 caracteres.'; // Exemplo
-                        return null;
-                      },
-                      textInputAction: TextInputAction.next,
-                    ),
+                    PasswordFormField(
+                    controller: _passwordController,
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value != null && value.length < 6) return 'Mínimo 6 caracteres.';
+                      return null;
+                    },
+                  ),
                     const SizedBox(height: 16),
 
-                     // --- Campo Confirmar Senha --- (NOVO)
-                    TextFormField(
+                    // --- Campo Confirmar Senha ---
+                    ConfirmPasswordFormField(
                       controller: _confirmPasswordController,
-                      obscureText: _obscureConfirmPassword,
-                       decoration: InputDecoration(
-                        labelText: 'Confirmar Senha',
-                        prefixIcon: Icon(Icons.lock_reset_outlined, color: colorScheme.onSurfaceVariant),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                        focusedBorder: OutlineInputBorder(
-                           borderRadius: BorderRadius.circular(12.0),
-                           borderSide: BorderSide(color: colorScheme.primary, width: 2),
-                         ),
-                        filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                             color: colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) return 'Confirmação obrigatória.';
-                        if (value != _passwordController.text) return 'As senhas não coincidem.';
-                        return null;
-                      },
+                      passwordController: _passwordController,
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) => _register(),
                     ),
@@ -194,7 +142,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         final isLoading = state is AuthLoading;
                         return ElevatedButton(
                           onPressed: isLoading ? null : _register,
-                           style: ElevatedButton.styleFrom(
+                          style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14.0),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
@@ -202,12 +150,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           child: isLoading
                               ? const SizedBox(
-                                  height: 24, width: 24,
-                                  child: CircularProgressIndicator(strokeWidth: 3, valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 3,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
                                 )
                               : const Text(
                                   'CRIAR CONTA',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                         );
                       },
@@ -219,13 +176,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         Text(
                           'Já tem uma conta?',
-                           style: TextStyle(color: colorScheme.onSurfaceVariant),
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
                         ),
                         TextButton(
                           onPressed: _navigateToLogin,
                           child: Text(
                             'Faça Login',
-                             style: TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: colorScheme.primary,
                             ),
