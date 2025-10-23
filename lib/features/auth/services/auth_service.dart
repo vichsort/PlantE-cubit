@@ -27,6 +27,7 @@ class AuthService {
       if (token != null && token.isNotEmpty) {
         await _secureStorageService.saveToken(token);
         _apiService.setToken(token);
+        print("AuthService login: Token set in ApiService: ${token.substring(0, 10)}..."); // Mostra início do token
 
       } else {
         throw Exception("Token não recebido do servidor após login.");
@@ -81,6 +82,7 @@ class AuthService {
     final token = await _secureStorageService.getToken();
     if (token != null) {
       _apiService.setToken(token);
+      print("Estamos no check: Token set in ApiService: ${token.substring(0, 10)}..."); // Mostra início do token
     } else {
       _apiService.clearToken();
     }

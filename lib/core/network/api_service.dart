@@ -7,7 +7,9 @@ class ApiService {
   // --- CONFIGURAÇÃO ---
   // Use '10.0.2.2' para o emulador Android acessar o localhost do PC.
   // Use o IP local da sua máquina (ex: '192.168.1.100') para iOS/Dispositivo Físico.
-  final String _baseUrl = 'http://10.0.2.2:5000/api/v1';
+  // final String _baseUrl = 'http://127.0.0.1:5000/api/v1';  // << TESTANDO NO WINDOWS
+  final String _baseUrl = 'http://10.0.2.2:5000/api/v1'; // << TESTANDO NO ANDROID
+  // final String _baseUrl = 'http://{ip}:5000/api/v1'; // <<< TESTANDO NO IP LOCAL
 
   String? _token; // Armazena o token JWT
 
@@ -25,11 +27,13 @@ class ApiService {
   // --- Cabeçalhos Padrão ---
   Map<String, String> _getHeaders() {
     final headers = <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
+      'Content-Type': 'application/json',
+      'Accept': '*/*',
     };
     if (_token != null) {
       headers['Authorization'] = 'Bearer $_token';
     }
+    print(_token.toString());
     return headers;
   }
 
