@@ -6,12 +6,12 @@ import '../cubit/garden_cubit.dart';
 import '../cubit/garden_state.dart';
 
 // -- Widgets --
-import '../widgets/plant_card.dart';
-import '../widgets/garden_fab.dart';
-import '../../../widgets/custom_search_bar.dart';
+import 'package:plante/features/garden/widgets/plant_card.dart';
+import 'package:plante/features/garden/widgets/garden_fab.dart';
+import 'package:plante/widgets/custom_search_bar.dart';
 
 // -- Models --
-import '../models/plant_summary.dart';
+import 'package:plante/features/garden/models/plant_summary.dart';
 
 class GardenScreen extends StatefulWidget {
   const GardenScreen({super.key});
@@ -33,10 +33,7 @@ class _GardenScreenState extends State<GardenScreen> {
     // ter sido carregado. Verifique o estado para evitar recargas desnecessárias.
     final currentState = context.read<GardenCubit>().state;
     if (currentState is GardenInitial) {
-       print("GardenScreen initState: Loading initial garden data.");
        context.read<GardenCubit>().loadGarden();
-    } else {
-       print("GardenScreen initState: Garden data likely already loaded ($currentState).");
     }
   }
 
@@ -49,14 +46,12 @@ class _GardenScreenState extends State<GardenScreen> {
 
   // Função chamada quando o texto da busca muda
   void _onSearchChanged() {
-    // Atualiza a UI para que o botão de limpar na search bar apareça/desapareça
     setState(() {});
     context.read<GardenCubit>().searchPlants(_searchController.text);
   }
 
   // Função para mostrar opções da planta (chamada pelo botão '...' no card)
   void _showPlantOptions(BuildContext context, PlantSummary plant) {
-    // Implementação do BottomSheet ou Menu
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -85,7 +80,7 @@ class _GardenScreenState extends State<GardenScreen> {
                  );
               },
             ),
-             ListTile( // Opção para ativar/desativar lembretes
+             ListTile(
                leading: Icon(
                  plant.isTrackedForWatering ? Icons.notifications_off_outlined : Icons.notifications_active_outlined,
                ),

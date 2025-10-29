@@ -30,6 +30,13 @@ void main() async {
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
+  // o que falta fazer:
+  // - implementar splash screen
+  // - implementar onboarding
+  // - logoff -> desconectar e tela de login
+  // - tela específica pra planta (detalhes, edição, remoção)
+  // - tela do perfil
+
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
