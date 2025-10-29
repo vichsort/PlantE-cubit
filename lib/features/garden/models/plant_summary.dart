@@ -6,26 +6,39 @@ class PlantSummary extends Equatable {
   final String? nickname; // Apelido dado pelo usuário (pode ser null)
   final String scientificName; // Nome científico (vem do PlantGuide)
   final bool isTrackedForWatering; // Flag de monitoramento de rega
+  final String? primaryImageUrl; // URL da imagem principal
 
   const PlantSummary({
     required this.id,
     this.nickname,
     required this.scientificName,
     required this.isTrackedForWatering,
+    this.primaryImageUrl,
   });
 
   factory PlantSummary.fromJson(Map<String, dynamic> json) {
-    if (json['id'] == null || json['scientific_name'] == null || json['tracked_watering'] == null) {
-      throw FormatException("JSON inválido para PlantSummary: campos obrigatórios faltando.");
+    if (json['id'] == null ||
+        json['scientific_name'] == null ||
+        json['tracked_watering'] == null) {
+      throw FormatException(
+        "JSON inválido para PlantSummary: campos obrigatórios faltando.",
+      );
     }
     return PlantSummary(
       id: json['id'] as String,
       nickname: json['nickname'] as String?,
       scientificName: json['scientific_name'] as String,
       isTrackedForWatering: json['tracked_watering'] as bool,
+      primaryImageUrl: json['primary_image_url'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [id, nickname, scientificName, isTrackedForWatering];
+  List<Object?> get props => [
+    id,
+    nickname,
+    scientificName,
+    isTrackedForWatering,
+    primaryImageUrl,
+  ];
 }
