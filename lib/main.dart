@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// -- Core Services --
-import 'core/network/api_service.dart';
-import 'core/storage/secure_storage_service.dart';
-import 'app_theme.dart';
-import 'app_router.dart';
+// -- Core --
+import 'package:plante/core/network/api_service.dart';
+import 'package:plante/core/storage/secure_storage_service.dart';
+import 'core/utils/location_utils.dart';
+import 'package:plante/app_theme.dart';
+import 'package:plante/app_router.dart';
 
 //-- Features --
 import 'package:plante/features/auth/cubit/auth_cubit.dart';
@@ -20,6 +21,7 @@ final AppRouter appRouter = AppRouter();
 final GardenService gardenService = GardenService(apiService);
 final IdentificationService identificationService = IdentificationService(
   apiService,
+  LocationService(),
 );
 
 void main() async {
