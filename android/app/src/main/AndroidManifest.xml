@@ -1,7 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Câmera -->
     <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!--  Mídia -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <!-- Localização -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    
     <application
         android:label="plante"
         android:name="${applicationName}"
