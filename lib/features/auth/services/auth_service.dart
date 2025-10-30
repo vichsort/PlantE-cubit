@@ -1,3 +1,4 @@
+import 'dart:ui';
 
 import 'package:plante/core/network/api_service.dart';
 import 'package:plante/core/storage/secure_storage_service.dart';
@@ -10,6 +11,10 @@ class AuthService {
   // Recebe as dependências (ApiService e SecureStorageService) via construtor.
   // Isso facilita a injeção de dependência e os testes.
   AuthService(this._apiService, this._secureStorageService);
+
+  void setSessionExpiredCallback(VoidCallback callback) {
+    _apiService.setSessionExpiredCallback(callback);
+  }
 
   /// Tenta autenticar o usuário com email e senha.
   /// Em caso de sucesso, salva o token JWT e o configura no ApiService.
@@ -27,8 +32,9 @@ class AuthService {
       if (token != null && token.isNotEmpty) {
         await _secureStorageService.saveToken(token);
         _apiService.setToken(token);
-        print("AuthService login: Token set in ApiService: ${token.substring(0, 10)}..."); // Mostra início do token
-
+        print(
+          "AuthService login: Token set in ApiService: ${token.substring(0, 10)}...",
+        ); // Mostra início do token
       } else {
         throw Exception("Token não recebido do servidor após login.");
       }
@@ -50,7 +56,6 @@ class AuthService {
         'email': email,
         'password': password,
       });
-
     } catch (e) {
       rethrow; // Re-lança a exceção para o Cubit tratar (ex: "Email já em uso")
     }
@@ -62,13 +67,14 @@ class AuthService {
     try {
       await _secureStorageService.deleteToken();
       _apiService.clearToken();
-
     } catch (e) {
       try {
         await _secureStorageService.deleteToken();
         _apiService.clearToken();
       } catch (finalError) {
-         throw Exception("AuthService: Critical error clearing token during logout failure - $finalError");
+        throw Exception(
+          "AuthService: Critical error clearing token during logout failure - $finalError",
+        );
       }
       rethrow;
     }
@@ -82,7 +88,9 @@ class AuthService {
     final token = await _secureStorageService.getToken();
     if (token != null) {
       _apiService.setToken(token);
-      print("Estamos no check: Token set in ApiService: ${token.substring(0, 10)}..."); // Mostra início do token
+      print(
+        "Estamos no check: Token set in ApiService: ${token.substring(0, 10)}...",
+      ); // Mostra início do token
     } else {
       _apiService.clearToken();
     }

@@ -6,7 +6,13 @@ import '../../../core/error/api_exception.dart'; // Importe a exceção
 class AuthCubit extends Cubit<AuthState> {
   final AuthService _authService;
 
-  AuthCubit(this._authService) : super(AuthInitial());
+  AuthCubit(this._authService) : super(AuthInitial()) {
+    // --- CONECTA O GATILHO ---
+    // Diz ao ApiService (que o AuthService segura) para chamar 'logout()'
+    // sempre que o ApiService disparar 'onSessionExpired'.
+    _authService.setSessionExpiredCallback(logout);
+    // -------------------------
+  }
 
   /// Verifica o status inicial de autenticação ao iniciar o app.
   Future<void> checkAuthStatus() async {

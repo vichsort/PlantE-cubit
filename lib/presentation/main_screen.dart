@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:plante/features/auth/cubit/auth_cubit.dart'; // <<< Importe o AuthCubit
+
 // -- Screens --
 import 'package:plante/features/garden/screens/garden_screen.dart';
 import 'package:plante/features/profile/screens/profile_screen.dart';
@@ -39,13 +41,14 @@ class _MainScreenState extends State<MainScreen> {
         create: (context) => GardenCubit(
           context.read<GardenService>(),
           context.read<IdentificationService>(),
+          context.read<AuthCubit>(),
         ),
         child: const GardenScreen(),
       ),
       BlocProvider<ProfileCubit>(
         create: (context) => ProfileCubit(context.read<ProfileService>()),
         // TODO: Chamar cubit.loadProfile() aqui no futuro
-        child: const ProfileScreen(), // O filho é a própria tela
+        child: const ProfileScreen(),
       ),
     ];
   }

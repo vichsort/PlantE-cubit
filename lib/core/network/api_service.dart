@@ -1,27 +1,35 @@
 import 'dart:convert';
 import 'dart:io'; // Para SocketException
 import 'package:http/http.dart' as http;
-import '../error/api_exception.dart'; // Importa a exceção customizada
+import 'package:flutter/foundation.dart';
+import 'package:plante/core/error/api_exception.dart';
 
 class ApiService {
   // --- CONFIGURAÇÃO ---
-  // Use '10.0.2.2' para o emulador Android acessar o localhost do PC.
   // Use o IP local da sua máquina (ex: '192.168.1.100') para iOS/Dispositivo Físico.
   // final String _baseUrl = 'http://127.0.0.1:5000/api/v1';  // << TESTANDO NO WINDOWS
-  final String _baseUrl = 'http://10.0.2.2:5000/api/v1'; // << TESTANDO NO ANDROID
+  final String _baseUrl =
+      'http://10.0.2.2:5000/api/v1'; // << TESTANDO NO ANDROID
   // final String _baseUrl = 'http://{ip}:5000/api/v1'; // <<< TESTANDO NO IP LOCAL
 
   String? _token; // Armazena o token JWT
 
+  VoidCallback? onSessionExpired;
+
   // --- Gerenciamento do Token ---
   void setToken(String? token) {
     _token = token;
-    print("ApiService: Token set.");
+    print("TOKEN ARMAZENADO");
+  }
+
+  void setSessionExpiredCallback(VoidCallback callback) {
+    onSessionExpired = callback;
+    print('Callback de sessão expirada definido.');
   }
 
   void clearToken() {
     _token = null;
-    print("ApiService: Token cleared.");
+    print("TOKEN LIMPO");
   }
 
   // --- Cabeçalhos Padrão ---
@@ -39,16 +47,25 @@ class ApiService {
 
   // --- Métodos HTTP ---
 
-  Future<dynamic> get(String endpoint) async { // Retorna dynamic pois 'data' pode ser Map ou List
+  Future<dynamic> get(String endpoint) async {
+    // Retorna dynamic pois 'data' pode ser Map ou List
     final url = Uri.parse('$_baseUrl$endpoint');
     print('ApiService GET: $url');
     try {
       final response = await http.get(url, headers: _getHeaders());
       return _handleResponse(response);
     } on SocketException {
-      throw ApiException('Erro de conexão. Verifique sua rede.', 503, errorCode: 'NETWORK_ERROR');
+      throw ApiException(
+        'Erro de conexão. Verifique sua rede.',
+        503,
+        errorCode: 'NETWORK_ERROR',
+      );
     } catch (e) {
-       throw ApiException('Erro desconhecido no GET: ${e.toString()}', 500, errorCode: 'UNKNOWN_GET_ERROR');
+      throw ApiException(
+        'Erro desconhecido no GET: ${e.toString()}',
+        500,
+        errorCode: 'UNKNOWN_GET_ERROR',
+      );
     }
   }
 
@@ -63,9 +80,17 @@ class ApiService {
       );
       return _handleResponse(response);
     } on SocketException {
-      throw ApiException('Erro de conexão. Verifique sua rede.', 503, errorCode: 'NETWORK_ERROR');
+      throw ApiException(
+        'Erro de conexão. Verifique sua rede.',
+        503,
+        errorCode: 'NETWORK_ERROR',
+      );
     } catch (e) {
-       throw ApiException('Erro desconhecido no POST: ${e.toString()}', 500, errorCode: 'UNKNOWN_POST_ERROR');
+      throw ApiException(
+        'Erro desconhecido no POST: ${e.toString()}',
+        500,
+        errorCode: 'UNKNOWN_POST_ERROR',
+      );
     }
   }
 
@@ -80,9 +105,17 @@ class ApiService {
       );
       return _handleResponse(response);
     } on SocketException {
-      throw ApiException('Erro de conexão. Verifique sua rede.', 503, errorCode: 'NETWORK_ERROR');
+      throw ApiException(
+        'Erro de conexão. Verifique sua rede.',
+        503,
+        errorCode: 'NETWORK_ERROR',
+      );
     } catch (e) {
-       throw ApiException('Erro desconhecido no PUT: ${e.toString()}', 500, errorCode: 'UNKNOWN_PUT_ERROR');
+      throw ApiException(
+        'Erro desconhecido no PUT: ${e.toString()}',
+        500,
+        errorCode: 'UNKNOWN_PUT_ERROR',
+      );
     }
   }
 
@@ -93,28 +126,56 @@ class ApiService {
       final response = await http.delete(url, headers: _getHeaders());
       return _handleResponse(response);
     } on SocketException {
-      throw ApiException('Erro de conexão. Verifique sua rede.', 503, errorCode: 'NETWORK_ERROR');
+      throw ApiException(
+        'Erro de conexão. Verifique sua rede.',
+        503,
+        errorCode: 'NETWORK_ERROR',
+      );
     } catch (e) {
-       throw ApiException('Erro desconhecido no DELETE: ${e.toString()}', 500, errorCode: 'UNKNOWN_DELETE_ERROR');
+      throw ApiException(
+        'Erro desconhecido no DELETE: ${e.toString()}',
+        500,
+        errorCode: 'UNKNOWN_DELETE_ERROR',
+      );
     }
   }
 
-  // --- Tratamento da Resposta ---
-  dynamic _handleResponse(http.Response response) { // Retorna dynamic
+  dynamic _handleResponse(http.Response response) {
     final statusCode = response.statusCode;
-    print('ApiService Response: $statusCode');
+    print('STATUS CODE RECEBIDO: $statusCode');
+
+    if (statusCode == 401) {
+      print(
+        "ApiService: Recebido 401. Disparando callback de sessão expirada.",
+      );
+      // Dispara o callback, se ele foi configurado
+      onSessionExpired?.call();
+      // Lança a exceção *depois* de disparar o callback
+      throw ApiException(
+        "Sua sessão expirou. Por favor, faça login novamente.",
+        401,
+        errorCode: "SESSION_EXPIRED",
+      );
+    }
 
     Map<String, dynamic> decodedBody;
     try {
-       decodedBody = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      decodedBody =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     } catch (e) {
-      throw ApiException('Resposta inválida do servidor (não JSON).', statusCode, errorCode: 'INVALID_RESPONSE_FORMAT');
+      throw ApiException(
+        'Resposta inválida do servidor (não JSON).',
+        statusCode,
+        errorCode: 'INVALID_RESPONSE_FORMAT',
+      );
     }
 
     final String status = decodedBody['status'] ?? 'error';
-    final String message = decodedBody['message'] ?? 'Erro desconhecido na resposta da API.';
+    final String message =
+        decodedBody['message'] ?? 'Erro desconhecido na resposta da API.';
     final String? errorCode = decodedBody['error_code'];
-    final dynamic data = decodedBody['data']; // 'data' PODE SER null, Map, ou List
+    final dynamic data =
+        decodedBody['data']; // 'data' PODE SER null, Map, ou List
 
     if (status == 'success') {
       // Retorna o conteúdo de 'data' diretamente
