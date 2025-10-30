@@ -6,9 +6,9 @@ import '../cubit/garden_cubit.dart';
 import '../cubit/garden_state.dart';
 
 // -- Widgets --
-import 'package:plante/features/garden/widgets/plant_card.dart';
+import 'package:plante/features/garden/widgets/plant_card.dart'; // Renomeei para PlantCard
 import 'package:plante/features/garden/widgets/garden_fab.dart';
-import 'package:plante/widgets/custom_search_bar.dart';
+import 'package:plante/widgets/custom_search_bar.dart'; // Caminho para o widget genérico
 
 // -- Models --
 import 'package:plante/features/garden/models/plant_summary.dart';
@@ -27,11 +27,8 @@ class _GardenScreenState extends State<GardenScreen> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
-
-    // Carrega o jardim se o estado atual for inicial
-    // Se o GardenCubit for criado mais acima (ex: MainScreen), ele pode já
-    // ter sido carregado. Verifique o estado para evitar recargas desnecessárias.
     final currentState = context.read<GardenCubit>().state;
+    // Carrega o jardim se estiver no estado inicial
     if (currentState is GardenInitial) {
       context.read<GardenCubit>().loadGarden();
     }
@@ -44,14 +41,18 @@ class _GardenScreenState extends State<GardenScreen> {
     super.dispose();
   }
 
-  // Função chamada quando o texto da busca muda
   void _onSearchChanged() {
+    // Atualiza a UI (para o botão 'limpar' da search bar)
     setState(() {});
+    // Chama a função de busca no Cubit
     context.read<GardenCubit>().searchPlants(_searchController.text);
   }
 
-  // Função para mostrar opções da planta (chamada pelo botão '...' no card)
+  // --- FUNÇÃO _showPlantOptions ATUALIZADA ---
   void _showPlantOptions(BuildContext context, PlantSummary plant) {
+    // Pega o Cubit *antes* de construir o BottomSheet
+    final gardenCubit = context.read<GardenCubit>();
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -60,30 +61,7 @@ class _GardenScreenState extends State<GardenScreen> {
       builder: (sheetContext) {
         return Wrap(
           children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.delete_outline),
-              title: const Text('Remover do Jardim'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                // Adicionar diálogo de confirmação aqui seria bom
-                context.read<GardenCubit>().deletePlant(plant.id);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit_outlined),
-              title: const Text('Editar Apelido'),
-              onTap: () {
-                Navigator.of(sheetContext).pop();
-                // TODO: Implementar edição de apelido (Dialog ou Navegação)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Funcionalidade Editar Apelido ainda não implementada.',
-                    ),
-                  ),
-                );
-              },
-            ),
+            // --- Opção de Ativar/Desativar Lembretes ---
             ListTile(
               leading: Icon(
                 plant.isTrackedForWatering
@@ -97,14 +75,43 @@ class _GardenScreenState extends State<GardenScreen> {
               ),
               onTap: () {
                 Navigator.of(sheetContext).pop();
-                // TODO: Chamar função no GardenCubit para POST/DELETE /track-watering
+                if (plant.isTrackedForWatering) {
+                  gardenCubit.untrackWatering(plant.id);
+                } else {
+                  gardenCubit.trackWatering(plant.id);
+                }
+              },
+            ),
+
+            ListTile(
+              leading: const Icon(Icons.edit_outlined),
+              title: const Text('Editar Apelido'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                // TODO: Implementar Dialog/Navegação para editar apelido
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text(
-                      'Funcionalidade Lembretes ainda não implementada no Cubit.',
+                      'Funcionalidade Editar Apelido ainda não implementada.',
                     ),
                   ),
                 );
+              },
+            ),
+
+            ListTile(
+              leading: Icon(
+                Icons.delete_outline,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                'Remover do Jardim',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                // TODO: Mostrar um Dialog de confirmação ("Tem certeza?")
+                gardenCubit.deletePlant(plant.id);
               },
             ),
           ],
@@ -112,6 +119,7 @@ class _GardenScreenState extends State<GardenScreen> {
       },
     );
   }
+  // ------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -125,20 +133,26 @@ class _GardenScreenState extends State<GardenScreen> {
         elevation: 0,
         backgroundColor: Colors.transparent,
       ),
-
       body: Column(
         children: [
           // --- BARRA DE PESQUISA ---
-          CustomSearchBar(controller: _searchController, onChanged: (value) {}),
-
+          CustomSearchBar(
+            controller: _searchController,
+            onChanged: (value) {
+              // O listener _onSearchChanged já cuida da lógica de busca
+              // e o setState no listener cuida da UI da search bar
+            },
+          ),
           // --- CONTEÚDO PRINCIPAL ---
           Expanded(
             child: BlocBuilder<GardenCubit, GardenState>(
               builder: (context, state) {
+                // ... (Estados GardenLoading e GardenInitial) ...
                 if (state is GardenLoading || state is GardenInitial) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
+                // ... (Estado GardenError) ...
                 if (state is GardenError) {
                   return Center(
                     child: Padding(
@@ -178,6 +192,7 @@ class _GardenScreenState extends State<GardenScreen> {
                   );
                 }
 
+                // ... (Estado GardenEmpty) ...
                 if (state is GardenEmpty) {
                   return Center(
                     child: Padding(
@@ -210,6 +225,7 @@ class _GardenScreenState extends State<GardenScreen> {
                   );
                 }
 
+                // ... (Estado GardenLoaded) ...
                 if (state is GardenLoaded) {
                   if (state.filteredPlants.isEmpty &&
                       state.searchTerm.isNotEmpty) {
@@ -227,31 +243,35 @@ class _GardenScreenState extends State<GardenScreen> {
                     );
                   }
 
+                  // Mostra a lista/grade
                   return GridView.builder(
                     padding: const EdgeInsets.only(
                       left: 16.0,
                       right: 16.0,
                       top: 8.0,
-                      bottom: 80.0,
+                      bottom: 80.0, // Espaço para o FAB não cobrir
                     ),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: 16.0,
                           mainAxisSpacing: 16.0,
-                          childAspectRatio: 0.70,
+                          childAspectRatio: 0.70, // Proporção do Card Polaroid
                         ),
                     itemCount: state.filteredPlants.length,
                     itemBuilder: (context, index) {
                       final plant = state.filteredPlants[index];
                       return PlantCard(
+                        // Usa o PlantCard que criamos
                         plant: plant,
                         onTap: () {
-                          Navigator.of(
-                            context,
-                          ).pushNamed('/plant-detail', arguments: plant.id);
+                          Navigator.of(context).pushNamed(
+                            '/plant-detail',
+                            arguments: plant.id, // Passa o ID para a rota
+                          );
                         },
                         onMoreOptionsTap: () {
+                          // Chama a função do BottomSheet
                           _showPlantOptions(context, plant);
                         },
                       );

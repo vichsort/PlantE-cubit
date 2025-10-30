@@ -16,6 +16,22 @@ class PlantSummary extends Equatable {
     this.primaryImageUrl,
   });
 
+  PlantSummary copyWith({
+    String? id,
+    String? nickname,
+    String? scientificName,
+    bool? isTrackedForWatering,
+    String? primaryImageUrl,
+  }) {
+    return PlantSummary(
+      id: id ?? this.id,
+      nickname: nickname ?? this.nickname,
+      scientificName: scientificName ?? this.scientificName,
+      isTrackedForWatering: isTrackedForWatering ?? this.isTrackedForWatering,
+      primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
+    );
+  }
+
   factory PlantSummary.fromJson(Map<String, dynamic> json) {
     if (json['id'] == null ||
         json['scientific_name'] == null ||
