@@ -2,7 +2,7 @@ import 'package:plante/core/network/api_service.dart';
 
 // -- Models --
 import 'package:plante/features/garden/models/plant_summary.dart';
-import 'package:plante/features/garden/models/plant_full_data.dart';
+import 'package:plante/features/plant_detail/models/plant_complete_data.dart';
 
 class GardenService {
   final ApiService _apiService;
@@ -14,22 +14,30 @@ class GardenService {
 
       if (responseData is List) {
         final plants = responseData
-            .map((jsonItem) => PlantSummary.fromJson(jsonItem as Map<String, dynamic>))
+            .map(
+              (jsonItem) =>
+                  PlantSummary.fromJson(jsonItem as Map<String, dynamic>),
+            )
             .toList();
         return plants;
-      } else if (responseData is Map && responseData.containsKey('items') && responseData['items'] is List) {
-         final List<dynamic> items = responseData['items'];
-         final plants = items
-            .map((jsonItem) => PlantSummary.fromJson(jsonItem as Map<String, dynamic>))
+      } else if (responseData is Map &&
+          responseData.containsKey('items') &&
+          responseData['items'] is List) {
+        final List<dynamic> items = responseData['items'];
+        final plants = items
+            .map(
+              (jsonItem) =>
+                  PlantSummary.fromJson(jsonItem as Map<String, dynamic>),
+            )
             .toList();
 
         return plants;
+      } else {
+        throw Exception(
+          "Formato de dados inesperado recebido da API para a lista de plantas.",
+        );
       }
-      else {
-        throw Exception("Formato de dados inesperado recebido da API para a lista de plantas.");
-      }
-    }
-    catch (e) {
+    } catch (e) {
       rethrow;
     }
   }
@@ -38,18 +46,22 @@ class GardenService {
     try {
       await _apiService.delete('/garden/plants/$plantId');
     } catch (e) {
-       rethrow;
+      rethrow;
     }
   }
 
-  Future<PlantFullData> fetchPlantDetails(String plantId) async {
+  Future<PlantCompleteData> fetchPlantDetails(String plantId) async {
     try {
-      final dynamic responseData = await _apiService.get('/garden/plants/$plantId');
+      final dynamic responseData = await _apiService.get(
+        '/garden/plants/$plantId',
+      );
       if (responseData is Map<String, dynamic>) {
-        final plantDetails = PlantFullData.fromJson(responseData);
+        final plantDetails = PlantCompleteData.fromJson(responseData);
         return plantDetails;
       } else {
-        throw Exception("Formato de dados inesperado recebido da API para detalhes da planta.");
+        throw Exception(
+          "Formato de dados inesperado recebido da API para detalhes da planta.",
+        );
       }
     } catch (e) {
       rethrow;
