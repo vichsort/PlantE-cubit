@@ -1,16 +1,16 @@
-// lib/presentation/main_screen.dart
-
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Importe BlocProvider e context.read
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-// Importe as telas
-import '../features/garden/screens/garden_screen.dart';
-import '../features/profile/screens/profile_screen.dart';
+// -- Screens --
+import 'package:plante/features/garden/screens/garden_screen.dart';
+import 'package:plante/features/profile/screens/profile_screen.dart';
 
-// Importe o Cubit e os Serviços necessários para criar o GardenCubit
-import '../features/garden/cubit/garden_cubit.dart';
-import '../features/garden/services/garden_service.dart';
-import '../features/garden/services/identification_service.dart';
+// -- Cubits --
+import 'package:plante/features/garden/cubit/garden_cubit.dart';
+import 'package:plante/features/garden/services/garden_service.dart';
+import 'package:plante/features/garden/services/identification_service.dart';
+import 'package:plante/features/profile/cubit/profile_cubit.dart';
+import 'package:plante/features/profile/services/profile_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -34,23 +34,20 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _pageController = PageController(initialPage: _currentIndex);
 
-    // Inicializa a lista de telas aqui, usando context.read
-    // Nota: Usar context.read no initState é geralmente seguro para
-    // ler providers que já existem acima (como os RepositoryProviders no main.dart)
     _screens = [
-      // --- Envolve GardenScreen com BlocProvider ---
       BlocProvider<GardenCubit>(
         create: (context) => GardenCubit(
-          // Lê os serviços que foram providos globalmente no main.dart
           context.read<GardenService>(),
           context.read<IdentificationService>(),
         ),
-        // Não chamamos loadGarden aqui, deixamos o initState da GardenScreen
-        // ou um gatilho inicial no build da GardenScreen fazer isso.
-        child: const GardenScreen(), // O filho é a própria tela
+        child: const GardenScreen(),
       ),
-      // ------------------------------------------
-      const ProfileScreen(), // ProfileScreen (não precisa de Cubit específico aqui, por enquanto)
+      BlocProvider<ProfileCubit>(
+        // <<< Adicionar
+        create: (context) => ProfileCubit(context.read<ProfileService>()),
+        // TODO: Chamar cubit.loadProfile() aqui no futuro
+        child: const ProfileScreen(), // O filho é a própria tela
+      ),
     ];
   }
 

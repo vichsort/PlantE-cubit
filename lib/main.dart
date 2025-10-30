@@ -13,12 +13,14 @@ import 'package:plante/features/auth/cubit/auth_cubit.dart';
 import 'package:plante/features/auth/services/auth_service.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
+import 'package:plante/features/profile/services/profile_service.dart';
 
 final ApiService apiService = ApiService();
 final SecureStorageService secureStorageService = SecureStorageService();
 final AuthService authService = AuthService(apiService, secureStorageService);
 final AppRouter appRouter = AppRouter();
 final GardenService gardenService = GardenService(apiService);
+final ProfileService profileService = ProfileService(apiService);
 final IdentificationService identificationService = IdentificationService(
   apiService,
   LocationService(),
@@ -34,7 +36,6 @@ class MyApp extends StatelessWidget {
 
   // o que falta fazer:
   // - implementar splash screen
-  // - implementar onboarding
   // - logoff -> desconectar e tela de login
   // - tela específica pra planta (detalhes, edição, remoção)
   // - tela do perfil
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider.value(value: authService),
         RepositoryProvider.value(value: gardenService),
         RepositoryProvider.value(value: identificationService),
+        RepositoryProvider.value(value: profileService),
       ],
       child: MultiBlocProvider(
         providers: [
