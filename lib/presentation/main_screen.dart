@@ -43,7 +43,6 @@ class _MainScreenState extends State<MainScreen> {
         child: const GardenScreen(),
       ),
       BlocProvider<ProfileCubit>(
-        // <<< Adicionar
         create: (context) => ProfileCubit(context.read<ProfileService>()),
         // TODO: Chamar cubit.loadProfile() aqui no futuro
         child: const ProfileScreen(), // O filho é a própria tela

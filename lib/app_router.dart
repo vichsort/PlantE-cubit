@@ -11,7 +11,9 @@ import 'features/plant_detail/screens/plant_detail_screen.dart';
 
 class AppRouter {
   Route? onGenerateRoute(RouteSettings settings) {
-    print("Navegando para: ${settings.name} com args: ${settings.arguments}"); // Para debug
+    print(
+      "Navegando para: ${settings.name} com args: ${settings.arguments}",
+    ); // Para debug
 
     switch (settings.name) {
       case '/':
@@ -39,20 +41,22 @@ class AppRouter {
           final plantId = arguments;
           return MaterialPageRoute(
             builder: (_) =>
-            // --- Exemplo de como prover um Cubit específico da tela ---
-            // BlocProvider(
-            //   // Cria uma NOVA instância do Cubit para ESTA tela/rota
-            //   create: (context) => PlantDetailCubit(
-            //     userPlantId: plantId,
-            //     // Passe o serviço necessário (pode vir do context.read se for global)
-            //     // gardenService: context.read<GardenService>()
-            //   )..fetchDetails(), // Chama fetchDetails() logo ao criar
-               PlantDetailScreen(plantid: plantId), // Passa o ID para a tela
+                // --- Exemplo de como prover um Cubit específico da tela ---
+                // BlocProvider(
+                //   // Cria uma NOVA instância do Cubit para ESTA tela/rota
+                //   create: (context) => PlantDetailCubit(
+                //     userPlantId: plantId,
+                //     // Passe o serviço necessário (pode vir do context.read se for global)
+                //     // gardenService: context.read<GardenService>()
+                //   )..fetchDetails(), // Chama fetchDetails() logo ao criar
+                PlantDetailScreen(), // Passa o ID para a tela
             // ),
           );
         } else {
           // Argumento inválido ou faltando para esta rota
-          print("Erro de Roteamento: Argumento inválido para /plant-detail. Esperado: String, Recebido: ${arguments.runtimeType}");
+          print(
+            "Erro de Roteamento: Argumento inválido para /plant-detail. Esperado: String, Recebido: ${arguments.runtimeType}",
+          );
           return _errorRoute(message: 'ID da planta inválido ou ausente.');
         }
 
@@ -64,12 +68,16 @@ class AppRouter {
   }
 
   /// Rota de fallback para erros ou rotas não encontradas.
-  static Route<dynamic> _errorRoute({String message = 'Página não encontrada!'}) {
-    return MaterialPageRoute(builder: (_) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Erro de Navegação')),
-        body: Center(child: Text(message)),
-      );
-    });
+  static Route<dynamic> _errorRoute({
+    String message = 'Página não encontrada!',
+  }) {
+    return MaterialPageRoute(
+      builder: (_) {
+        return Scaffold(
+          appBar: AppBar(title: const Text('Erro de Navegação')),
+          body: Center(child: Text(message)),
+        );
+      },
+    );
   }
 }
