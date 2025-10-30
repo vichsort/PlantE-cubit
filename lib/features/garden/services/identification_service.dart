@@ -15,7 +15,6 @@ class IdentificationService {
     try {
       // Localização
       final locationData = await _locationService.getCurrentLocation();
-      print("IdentificationService: Usando localização: $locationData");
 
       final imageBase64 = await imageFileToBase64(imageFile);
       final responseData = await _apiService.post('/garden/identify', {

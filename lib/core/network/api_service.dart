@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'dart:io'; // Para SocketException
-import 'package:http/http.dart' as http;
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
 import 'package:plante/core/error/api_exception.dart';
 
 class ApiService {
   // --- CONFIGURAÇÃO ---
-  // Use o IP local da sua máquina (ex: '192.168.1.100') para iOS/Dispositivo Físico.
-  // final String _baseUrl = 'http://127.0.0.1:5000/api/v1';  // << TESTANDO NO WINDOWS
+  // final String _baseUrl = 'http://127.0.0.1:5000/api/v1'; // << TESTANDO NO WINDOWS
   final String _baseUrl =
       'http://10.0.2.2:5000/api/v1'; // << TESTANDO NO ANDROID
   // final String _baseUrl = 'http://{ip}:5000/api/v1'; // <<< TESTANDO NO IP LOCAL
@@ -19,17 +19,14 @@ class ApiService {
   // --- Gerenciamento do Token ---
   void setToken(String? token) {
     _token = token;
-    print("TOKEN ARMAZENADO");
   }
 
   void setSessionExpiredCallback(VoidCallback callback) {
     onSessionExpired = callback;
-    print('Callback de sessão expirada definido.');
   }
 
   void clearToken() {
     _token = null;
-    print("TOKEN LIMPO");
   }
 
   // --- Cabeçalhos Padrão ---
@@ -46,9 +43,7 @@ class ApiService {
   }
 
   // --- Métodos HTTP ---
-
   Future<dynamic> get(String endpoint) async {
-    // Retorna dynamic pois 'data' pode ser Map ou List
     final url = Uri.parse('$_baseUrl$endpoint');
     print('ApiService GET: $url');
     try {
@@ -71,7 +66,6 @@ class ApiService {
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    print('ApiService POST: $url');
     try {
       final response = await http.post(
         url,
@@ -96,7 +90,6 @@ class ApiService {
 
   Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    print('ApiService PUT: $url');
     try {
       final response = await http.put(
         url,
@@ -121,7 +114,6 @@ class ApiService {
 
   Future<dynamic> delete(String endpoint) async {
     final url = Uri.parse('$_baseUrl$endpoint');
-    print('ApiService DELETE: $url');
     try {
       final response = await http.delete(url, headers: _getHeaders());
       return _handleResponse(response);
@@ -142,13 +134,8 @@ class ApiService {
 
   dynamic _handleResponse(http.Response response) {
     final statusCode = response.statusCode;
-    print('STATUS CODE RECEBIDO: $statusCode');
 
     if (statusCode == 401) {
-      print(
-        "ApiService: Recebido 401. Disparando callback de sessão expirada.",
-      );
-      // Dispara o callback, se ele foi configurado
       onSessionExpired?.call();
       // Lança a exceção *depois* de disparar o callback
       throw ApiException(

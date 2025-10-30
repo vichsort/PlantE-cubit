@@ -4,16 +4,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 // -- Core --
 import 'package:plante/core/network/api_service.dart';
 import 'package:plante/core/storage/secure_storage_service.dart';
-import 'core/utils/location_utils.dart';
+import 'package:plante/core/utils/location_utils.dart';
 import 'package:plante/app_theme.dart';
 import 'package:plante/app_router.dart';
 
 //-- Features --
 import 'package:plante/features/auth/cubit/auth_cubit.dart';
 import 'package:plante/features/auth/services/auth_service.dart';
+import 'package:plante/features/auth/cubit/auth_state.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
-import 'package:plante/features/auth/cubit/auth_state.dart';
 import 'package:plante/features/profile/services/profile_service.dart';
 
 final ApiService apiService = ApiService();
@@ -80,18 +80,10 @@ class MyApp extends StatelessWidget {
 
                 // Lógica de Redirecionamento Global
                 if (state is Unauthenticated) {
-                  // Se o estado for 'Unauthenticated' (por logout ou falha inicial)
-                  // Navega para /login e REMOVE todas as outras telas da pilha.
-                  print(
-                    "VIGIA GLOBAL: Estado Unauthenticated! Navegando para /login.",
-                  );
                   navigator.pushNamedAndRemoveUntil('/login', (route) => false);
                 } else if (state is Authenticated) {
                   // Se o estado for 'Authenticated' (após login ou na verificação inicial)
                   // Navega para /main (MainScreen) e REMOVE a tela de login/splash da pilha.
-                  print(
-                    "VIGIA GLOBAL: Estado Authenticated! Navegando para /main.",
-                  );
                   navigator.pushNamedAndRemoveUntil('/main', (route) => false);
                 }
               },

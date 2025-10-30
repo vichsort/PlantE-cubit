@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// -- Core --
+import 'package:plante/core/utils/location_utils.dart';
+
 // -- Cubits e services --
 import 'package:plante/features/plant_detail/cubit/plant_detail_cubit.dart';
-import 'package:plante/core/utils/location_utils.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
 
@@ -17,10 +19,6 @@ import 'package:plante/presentation/splash_screen.dart';
 
 class AppRouter {
   Route? onGenerateRoute(RouteSettings settings) {
-    print(
-      "Navegando para: ${settings.name} com args: ${settings.arguments}",
-    ); // Para debug
-
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const SplashScreen());
@@ -42,27 +40,20 @@ class AppRouter {
         if (arguments is String) {
           final plantId = arguments;
           return MaterialPageRoute(
-            // O 'builder' nos dá um 'context' que tem acesso
-            // aos serviços globais providos no main.dart
             builder: (context) => BlocProvider<PlantDetailCubit>(
               create: (context) => PlantDetailCubit(
-                userPlantId: plantId, // 1. Passa o ID da planta
-                // 2. Lê os serviços globais do contexto
+                userPlantId: plantId,
                 gardenService: context.read<GardenService>(),
                 identificationService: context.read<IdentificationService>(),
                 locationService: context.read<LocationService>(),
-              )..fetchDetails(), // 3. Chama a busca inicial de dados
-              child: const PlantDetailScreen(), // 4. Constrói a tela
+              )..fetchDetails(),
+              child: const PlantDetailScreen(),
             ),
           );
         } else {
           // Argumento inválido
-          print(
-            "Erro de Roteamento: Argumento inválido para /plant-detail. Esperado: String, Recebido: ${arguments.runtimeType}",
-          );
           return _errorRoute(message: 'ID da planta inválido ou ausente.');
         }
-      // -------------------------------
 
       default:
         return _errorRoute();

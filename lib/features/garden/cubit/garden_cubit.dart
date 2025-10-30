@@ -2,15 +2,14 @@ import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../auth/cubit/auth_cubit.dart'; // <<< 1. IMPORTE O AUTH_CUBIT
-
 // -- Core --
 import 'package:plante/features/garden/cubit/garden_state.dart';
 import 'package:plante/core/error/api_exception.dart';
 
-// -- Services --
+// -- Cubits e Services --
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
+import 'package:plante/features/auth/cubit/auth_cubit.dart';
 
 // -- Models --
 import 'package:plante/features/garden/models/plant_summary.dart';
@@ -44,8 +43,7 @@ class GardenCubit extends Cubit<GardenState> {
       // --- 4. A LÓGICA MÁGICA ---
       if (e.statusCode == 401) {
         // Token inválido! A sessão morreu.
-        print("GardenCubit: Recebido 401. Forçando logout global.");
-        _authCubit.logout(); // <<< CHAMA O LOGOUT GLOBAL
+        _authCubit.logout();
       } else {
         // Outro erro de API (ex: 500, 404)
         emit(GardenError(e.message));
@@ -105,10 +103,6 @@ class GardenCubit extends Cubit<GardenState> {
         await loadGarden();
       }
     } on ApiException catch (e) {
-      if (e.statusCode == 401) {
-        // <<< CHECA 401 AQUI TAMBÉM
-        _authCubit.logout();
-      }
       emit(GardenError("Falha ao identificar planta: ${e.message}"));
     } catch (e) {
       emit(
@@ -154,9 +148,6 @@ class GardenCubit extends Cubit<GardenState> {
     if (state is! GardenLoaded) return;
     try {
       await _gardenService.untrackWatering(plantId);
-      print(
-        "GardenCubit: Watering untracked for $plantId. Refreshing plant list.",
-      );
       // Atualiza a lista localmente
       _updatePlantInState(
         plantId,

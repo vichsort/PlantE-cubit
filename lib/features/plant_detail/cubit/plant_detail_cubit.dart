@@ -45,7 +45,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
     }
   }
 
-  /// Dispara a análise profunda (Gemini Details + Nutritional)
+  // analise profunda
   Future<void> triggerDeepAnalysis() async {
     if (state is! PlantDetailLoaded) return;
     final currentState = state as PlantDetailLoaded;
@@ -63,7 +63,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
       // TODO: Criar 'triggerDeepAnalysis' no GardenService
       // await _gardenService.triggerDeepAnalysis(userPlantId);
       print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-deep");
-      await Future.delayed(const Duration(seconds: 1)); // Simulação
+      await Future.delayed(const Duration(seconds: 1));
 
       emit(
         currentState.copyWith(
@@ -88,7 +88,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
     }
   }
 
-  /// Dispara a análise de saúde (Plant.id Health + Gemini Treatment)
+  // health
   Future<void> triggerHealthAnalysis() async {
     if (state is! PlantDetailLoaded) return;
     final currentState = state as PlantDetailLoaded;
@@ -100,7 +100,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
         imageQuality: 80,
         maxWidth: 1024,
       );
-      if (imageFile == null) return; // Usuário cancelou
+      if (imageFile == null) return;
 
       emit(
         currentState.copyWith(
@@ -122,7 +122,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
       //   location
       // );
       print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-health");
-      await Future.delayed(const Duration(seconds: 1)); // Simulação
+      await Future.delayed(const Duration(seconds: 1));
 
       emit(
         currentState.copyWith(
@@ -147,7 +147,6 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
     }
   }
 
-  /// Limpa as mensagens de SnackBar (chamado pela UI após exibir)
   void clearMessages() {
     if (state is PlantDetailLoaded) {
       final currentState = state as PlantDetailLoaded;

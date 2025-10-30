@@ -15,7 +15,7 @@ class PlantCard extends StatelessWidget {
     this.cardColor = Colors.white,
   });
 
-  // Constrói o placeholder cinza com um ícone.
+  // Placeholder do erro
   Widget _buildPlaceholder() {
     return Container(
       color: Colors.grey[800],

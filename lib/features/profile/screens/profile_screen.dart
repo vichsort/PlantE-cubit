@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+// -- Features --
 import 'package:plante/features/profile/cubit/profile_cubit.dart';
 import 'package:plante/features/profile/cubit/profile_state.dart';
 import 'package:plante/features/auth/cubit/auth_cubit.dart';

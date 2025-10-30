@@ -1,22 +1,21 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../services/auth_service.dart';
-import 'auth_state.dart';
-import '../../../core/error/api_exception.dart'; // Importe a exceção
+
+// -- Core --
+import 'package:plante/core/error/api_exception.dart';
+
+// -- Features --
+import 'package:plante/features/auth/services/auth_service.dart';
+import 'package:plante/features/auth/cubit/auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthService _authService;
 
   AuthCubit(this._authService) : super(AuthInitial()) {
-    // --- CONECTA O GATILHO ---
-    // Diz ao ApiService (que o AuthService segura) para chamar 'logout()'
-    // sempre que o ApiService disparar 'onSessionExpired'.
     _authService.setSessionExpiredCallback(logout);
-    // -------------------------
   }
 
-  /// Verifica o status inicial de autenticação ao iniciar o app.
+  // Verifica o status inicial de autenticação ao iniciar o app.
   Future<void> checkAuthStatus() async {
-    // Não emite Loading aqui para evitar piscar a tela
     try {
       final token = await _authService.checkAuthenticationStatus();
       if (token != null) {
@@ -25,12 +24,11 @@ class AuthCubit extends Cubit<AuthState> {
         emit(Unauthenticated());
       }
     } catch (e) {
-      // Se houver erro ao ler o token (raro), assume deslogado
       emit(Unauthenticated());
     }
   }
 
-  /// Tenta realizar o login do usuário.
+  // Tenta realizar o login do usuário.
   Future<void> login(String email, String password) async {
     emit(AuthLoading());
     try {
@@ -43,15 +41,13 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Tenta registrar um novo usuário.
+  // Tenta registrar um novo usuário.
   Future<void> register(String email, String password) async {
     emit(AuthLoading());
     try {
       await _authService.register(email, password);
       // Após o registro, deixamos o usuário deslogado para que ele faça login
       emit(Unauthenticated());
-      // (Opcional: Poderia emitir um estado 'RegistrationSuccess'
-      // para a UI mostrar uma mensagem antes de ir para Unauthenticated)
     } on ApiException catch (e) {
       emit(AuthFailure(e.message));
     } catch (e) {
@@ -59,14 +55,13 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Realiza o logout do usuário.
+  // Realiza o logout do usuário.
   Future<void> logout() async {
-    emit(AuthLoading()); // Mostra loading durante o logout
+    emit(AuthLoading());
     try {
       await _authService.logout();
       emit(Unauthenticated());
     } catch (e) {
-      // Mesmo se o logout falhar, desloga localmente
       emit(Unauthenticated());
     }
   }

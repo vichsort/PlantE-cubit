@@ -1,46 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart'; // Para formatar datas
+import 'package:intl/intl.dart';
 
-// Importa o Cubit e o Estado que controlam esta tela
-import '../cubit/plant_detail_cubit.dart';
-import '../cubit/plant_detail_state.dart';
+// -- Cubits --
+import 'package:plante/features/plant_detail/cubit/plant_detail_cubit.dart';
+import 'package:plante/features/plant_detail/cubit/plant_detail_state.dart';
 
-// Importa os modelos de dados que o Estado 'Loaded' nos dará
-import '../models/plant_complete_data.dart';
-import '../models/plant_details_data.dart';
-import '../models/plant_nutritional_data.dart';
-import '../models/plant_health_data.dart';
+// -- Models --
+import 'package:plante/features/plant_detail/models/plant_complete_data.dart';
+import 'package:plante/features/plant_detail/models/plant_details_data.dart';
+import 'package:plante/features/plant_detail/models/plant_nutritional_data.dart';
+import 'package:plante/features/plant_detail/models/plant_health_data.dart';
 
 class PlantDetailScreen extends StatelessWidget {
   const PlantDetailScreen({super.key});
 
-  // Nota: Não precisamos mais do 'plantId' aqui, pois o Cubit
-  // foi provido pelo AppRouter e já sabe qual ID buscar.
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Usamos um BlocConsumer para lidar com 'build' (UI principal)
-      // e 'listen' (SnackBars) ao mesmo tempo.
       body: BlocConsumer<PlantDetailCubit, PlantDetailState>(
-        // --- LISTENER (Para Ações) ---
-        // Ouve mudanças de estado para mostrar SnackBars de feedback
-        // (não reconstrói a UI, apenas executa ações)
         listener: (context, state) {
           if (state is PlantDetailLoaded) {
-            // Se uma mensagem de informação (ex: "Análise solicitada") aparecer
             if (state.infoMessage != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.infoMessage!),
-                  backgroundColor: Colors.green, // Feedback positivo
+                  backgroundColor: Colors.green,
                 ),
               );
-              // Limpa a mensagem no Cubit para não mostrar de novo
               context.read<PlantDetailCubit>().clearMessages();
             }
-            // Se uma mensagem de erro (ex: "Limite atingido") aparecer
             if (state.errorMessage != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -53,15 +42,11 @@ class PlantDetailScreen extends StatelessWidget {
           }
         },
 
-        // --- BUILDER (Para a UI Principal) ---
-        // Decide o que mostrar na tela com base no estado atual
         builder: (context, state) {
-          // --- Estado de Carregamento Inicial ---
           if (state is PlantDetailInitial || state is PlantDetailLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // --- Estado de Erro Inicial ---
           if (state is PlantDetailError) {
             return Center(
               child: Padding(
@@ -92,32 +77,24 @@ class PlantDetailScreen extends StatelessWidget {
             );
           }
 
-          // --- Estado Carregado (Sucesso) ---
-          // Se não for nenhum dos acima, deve ser PlantDetailLoaded
           if (state is PlantDetailLoaded) {
             final plant = state.plant;
             // Usamos um Stack para ter conteúdo rolável e botões fixos
             return Stack(
               children: [
-                // 1. O Conteúdo Rolável
                 _buildScrollableContent(context, plant),
-
-                // 2. Os Botões Fixos no Rodapé
                 _buildFixedBottomButtons(context, state),
               ],
             );
           }
 
-          // Fallback (não deve ser alcançado)
           return const Center(child: Text('Estado desconhecido.'));
         },
       ),
     );
   }
 
-  // --- Widgets Auxiliares ---
-
-  /// Constrói o conteúdo principal da tela que pode ser rolado
+  // Constrói o conteúdo principal da tela que pode ser rolado
   Widget _buildScrollableContent(
     BuildContext context,
     PlantCompleteData plant,
@@ -130,9 +107,9 @@ class PlantDetailScreen extends StatelessWidget {
       slivers: [
         // AppBar com a Imagem
         SliverAppBar(
-          expandedHeight: 300.0, // Altura da imagem de fundo
-          floating: false, // Não flutua
-          pinned: true, // A AppBar fica fixa no topo ao rolar
+          expandedHeight: 300.0,
+          floating: false,
+          pinned: true,
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
               plant.displayName, // Usa o helper (nickname ou nome científico)
@@ -166,7 +143,7 @@ class PlantDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // --- Card: Informações do Jardim ---
+                // Card: Informações do Jardim
                 _buildInfoCard(
                   context: context,
                   title: 'Minhas Informações',
@@ -209,7 +186,7 @@ class PlantDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // --- Card: Notas de Cuidado ---
+                // Card: Notas de Cuidado
                 _buildInfoCard(
                   context: context,
                   title: 'Minhas Notas de Cuidado',
@@ -223,21 +200,21 @@ class PlantDetailScreen extends StatelessWidget {
                   ],
                 ),
 
-                // --- Seção de Análise de Detalhes (do Gemini) ---
+                // seção de Análise de Detalhes (do Gemini)
                 if (plant.hasDetails) ...[
                   // Se 'details' não for nulo
                   const SizedBox(height: 16),
                   _buildGeminiDetailsCard(context, plant.details!),
                 ],
 
-                // --- Seção de Análise Nutricional (do Gemini) ---
+                // Seção de Análise Nutricional (do Gemini)
                 if (plant.hasNutritional) ...[
                   // Se 'nutritional' não for nulo
                   const SizedBox(height: 16),
                   _buildGeminiNutritionalCard(context, plant.nutritional!),
                 ],
 
-                // --- Seção de Análise de Saúde (do Gemini) ---
+                // Seção de Análise de Saúde (do Gemini)
                 if (plant.hasHealthInfo) ...[
                   // Se 'health' não for nulo
                   const SizedBox(height: 16),
@@ -266,17 +243,9 @@ class PlantDetailScreen extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        // Padding para espaçamento e para salvar da 'safe area' (ex: barra de gestos do iOS)
-        padding: const EdgeInsets.fromLTRB(
-          16.0,
-          12.0,
-          16.0,
-          24.0,
-        ), // Padding inferior maior
+        padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
         decoration: BoxDecoration(
-          // Cor de fundo baseada no tema
           color: theme.colorScheme.surface,
-          // Sombra sutil para destacar
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.1),
@@ -284,16 +253,14 @@ class PlantDetailScreen extends StatelessWidget {
               offset: const Offset(0, -2),
             ),
           ],
-          // Bordas arredondadas apenas no topo
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
         ),
         child: Row(
           children: [
-            // --- Botão 1: Inspecionar Saúde ---
+            // Inspecionar Saúde
             Expanded(
               child: ElevatedButton.icon(
                 icon: state.isAnalyzingHealth
-                    // Mostra loading no botão
                     ? const SizedBox(
                         width: 20,
                         height: 20,
@@ -308,7 +275,7 @@ class PlantDetailScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // --- Botão 2: Mais Detalhes ---
+            // Mais Detalhes
             Expanded(
               child: ElevatedButton.icon(
                 icon: state.isAnalyzingDetails
@@ -336,7 +303,7 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Placeholder padrão para a imagem
+  // Placeholder padrão para a imagem
   Widget _buildImagePlaceholder() {
     return Container(
       color: Colors.grey[800],
@@ -346,10 +313,6 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- Widgets Auxiliares de Exibição de Dados ---
-  // (Coloque-os no final do arquivo ou separe em 'widgets/')
-
-  /// Um card genérico para seções de informação
   Widget _buildInfoCard({
     required BuildContext context,
     required String title,
@@ -357,7 +320,6 @@ class PlantDetailScreen extends StatelessWidget {
   }) {
     return Card(
       elevation: 0,
-      // Cor sutil do Material 3 para contêineres
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -379,7 +341,7 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Uma linha genérica para pares de ícone-título-valor
+  // Uma linha genérica para pares de ícone-título-valor
   Widget _infoRow(
     BuildContext context, {
     required IconData icon,
@@ -409,7 +371,7 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Card para iterar sobre os Detalhes do Gemini
+  // Card para iterar sobre os Detalhes do Gemini
   Widget _buildGeminiDetailsCard(
     BuildContext context,
     PlantDetailsData details,
@@ -470,7 +432,7 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Card para iterar sobre os Dados Nutricionais do Gemini
+  // Card para iterar sobre os Dados Nutricionais do Gemini
   Widget _buildGeminiNutritionalCard(
     BuildContext context,
     PlantNutritionalData nutritional,
@@ -508,7 +470,7 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  /// Card para iterar sobre os Dados de Saúde do Gemini
+  // Card para iterar sobre os Dados de Saúde do Gemini
   Widget _buildGeminiHealthCard(BuildContext context, PlantHealthData health) {
     return _buildInfoCard(
       context: context,

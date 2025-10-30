@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:plante/features/auth/cubit/auth_cubit.dart'; // <<< Importe o AuthCubit
-
 // -- Screens --
 import 'package:plante/features/garden/screens/garden_screen.dart';
 import 'package:plante/features/profile/screens/profile_screen.dart';
@@ -13,6 +11,7 @@ import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
 import 'package:plante/features/profile/cubit/profile_cubit.dart';
 import 'package:plante/features/profile/services/profile_service.dart';
+import 'package:plante/features/auth/cubit/auth_cubit.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

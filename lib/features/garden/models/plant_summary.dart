@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-// Modelo de dados resumido para exibir uma planta na lista do jardim.
 class PlantSummary extends Equatable {
   final String id; // O ID da UserPlant (UUID)
   final String? nickname; // Apelido dado pelo usuário (pode ser null)

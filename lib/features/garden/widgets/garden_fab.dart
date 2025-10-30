@@ -18,7 +18,10 @@ class GardenFab extends StatelessWidget {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 20.0,
+              horizontal: 16.0,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,15 +51,15 @@ class GardenFab extends StatelessWidget {
                     Navigator.of(sheetContext).pop();
                     gardenCubit.identifyNewPlant(ImageSource.gallery);
                   },
-                   style: ElevatedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
                 const SizedBox(height: 10),
-                 TextButton(
-                   onPressed: () => Navigator.of(sheetContext).pop(),
-                   child: const Text('Cancelar'),
-                 ),
+                TextButton(
+                  onPressed: () => Navigator.of(sheetContext).pop(),
+                  child: const Text('Cancelar'),
+                ),
               ],
             ),
           ),
@@ -69,10 +72,11 @@ class GardenFab extends StatelessWidget {
   Widget build(BuildContext context) {
     // Retorna o FloatingActionButton padrão do Material Design
     return FloatingActionButton(
-      onPressed: () => _showImageSourceActionSheet(context), // Chama a função que mostra as opções
+      onPressed: () => _showImageSourceActionSheet(
+        context,
+      ), // Chama a função que mostra as opções
       tooltip: 'Identificar Planta', // Texto de ajuda ao pressionar e segurar
       child: const Icon(Icons.add_a_photo_outlined), // Ícone de câmera com '+'
-      // A cor virá do tema (FloatingActionButtonThemeData)
     );
   }
 }

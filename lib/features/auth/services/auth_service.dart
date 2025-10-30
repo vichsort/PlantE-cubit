@@ -57,12 +57,10 @@ class AuthService {
         'password': password,
       });
     } catch (e) {
-      rethrow; // Re-lança a exceção para o Cubit tratar (ex: "Email já em uso")
+      rethrow;
     }
   }
 
-  /// Realiza o logout do usuário.
-  /// Limpa o token do armazenamento seguro e do ApiService.
   Future<void> logout() async {
     try {
       await _secureStorageService.deleteToken();
@@ -80,17 +78,14 @@ class AuthService {
     }
   }
 
-  /// Verifica se existe um token JWT válido armazenado localmente.
-  /// Usado na inicialização do app para determinar o estado inicial de autenticação.
-  /// Retorna o token se existir e for válido (a validação real é feita pela API),
-  /// caso contrário, retorna null.
+  // olha se existe token de autentic já instalado
   Future<String?> checkAuthenticationStatus() async {
     final token = await _secureStorageService.getToken();
     if (token != null) {
       _apiService.setToken(token);
       print(
         "Estamos no check: Token set in ApiService: ${token.substring(0, 10)}...",
-      ); // Mostra início do token
+      );
     } else {
       _apiService.clearToken();
     }

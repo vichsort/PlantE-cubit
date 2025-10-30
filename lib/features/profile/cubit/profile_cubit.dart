@@ -8,24 +8,21 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   ProfileCubit(this._profileService) : super(ProfileInitial());
 
-  /// (TESTE) Tenta atualizar o usuário para Premium
   Future<void> upgradeToPremium() async {
     emit(ProfileLoading());
     try {
       final newStatus = await _profileService.upgradeToPremium();
       emit(ProfileUpdateSuccess("Status atualizado para: $newStatus"));
-      // Em um app real, chamaríamos loadProfile() aqui para atualizar a UI
-      emit(ProfileInitial()); // Volta ao estado inicial após o sucesso
+      emit(ProfileInitial());
     } on ApiException catch (e) {
       emit(ProfileUpdateFailure(e.message));
-      emit(ProfileInitial()); // Volta ao estado inicial após o erro
+      emit(ProfileInitial());
     } catch (e) {
       emit(ProfileUpdateFailure(e.toString()));
       emit(ProfileInitial());
     }
   }
 
-  /// (TESTE) Tenta reverter o usuário para Free
   Future<void> revertToFree() async {
     emit(ProfileLoading());
     try {

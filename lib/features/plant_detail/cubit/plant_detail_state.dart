@@ -1,6 +1,7 @@
-// lib/features/plant_detail/cubit/plant_detail_state.dart
 import 'package:equatable/equatable.dart';
-import '../models/plant_complete_data.dart'; // O modelo completo que criamos
+
+// -- Models --
+import '../models/plant_complete_data.dart';
 
 abstract class PlantDetailState extends Equatable {
   const PlantDetailState();
@@ -8,21 +9,15 @@ abstract class PlantDetailState extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Estado inicial, tela nunca foi carregada
 class PlantDetailInitial extends PlantDetailState {}
 
-/// Estado de carregamento da página inteira
 class PlantDetailLoading extends PlantDetailState {}
 
-/// Estado de sucesso, a página está carregada com os dados da planta
 class PlantDetailLoaded extends PlantDetailState {
   final PlantCompleteData plant;
 
-  // Flags para os botões de ação (mostram loading neles)
   final bool isAnalyzingDetails;
   final bool isAnalyzingHealth;
-
-  // Mensagens para SnackBars (para feedback de ações)
   final String? infoMessage;
   final String? errorMessage;
 
@@ -43,14 +38,14 @@ class PlantDetailLoaded extends PlantDetailState {
     errorMessage,
   ];
 
-  /// Helper para criar cópias do estado modificando apenas o que é necessário
+  // Helper de cópia pra ajudar na atualização parcial do estado
   PlantDetailLoaded copyWith({
     PlantCompleteData? plant,
     bool? isAnalyzingDetails,
     bool? isAnalyzingHealth,
     String? infoMessage,
     String? errorMessage,
-    bool clearInfoMessage = false, // Flags para limpar as mensagens
+    bool clearInfoMessage = false,
     bool clearErrorMessage = false,
   }) {
     return PlantDetailLoaded(
@@ -65,7 +60,6 @@ class PlantDetailLoaded extends PlantDetailState {
   }
 }
 
-/// Estado de falha no carregamento inicial da página
 class PlantDetailError extends PlantDetailState {
   final String message;
   const PlantDetailError(this.message);

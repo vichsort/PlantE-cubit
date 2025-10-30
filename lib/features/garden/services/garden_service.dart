@@ -74,12 +74,8 @@ class GardenService {
   // Ativa monitoramento de rega para uma planta.
   Future<void> trackWatering(String plantId) async {
     try {
-      print("GardenService: Tracking watering for $plantId..."); // Debug
-      // Envia uma requisição POST vazia, como esperado pelo endpoint
       await _apiService.post('/garden/plants/$plantId/track-watering', {});
-      print("GardenService: Watering tracking enabled for $plantId."); // Debug
     } catch (e) {
-      print("GardenService: Error tracking watering - $e"); // Debug
       rethrow;
     }
   }
@@ -87,11 +83,8 @@ class GardenService {
   // Desativa o monitoramento de rega para uma planta.
   Future<void> untrackWatering(String plantId) async {
     try {
-      print("GardenService: Untracking watering for $plantId..."); // Debug
       await _apiService.delete('/garden/plants/$plantId/track-watering');
-      print("GardenService: Watering tracking disabled for $plantId."); // Debug
     } catch (e) {
-      print("GardenService: Error untracking watering - $e"); // Debug
       rethrow;
     }
   }
@@ -99,15 +92,8 @@ class GardenService {
   // Atualiza os dados de uma planta (nickname, last_watered, care_notes).
   Future<void> updatePlant(String plantId, Map<String, dynamic> updates) async {
     try {
-      print(
-        "GardenService: Updating plant $plantId with data: $updates",
-      ); // Debug
-      // O endpoint PUT retorna os dados atualizados, mas não precisamos
-      // usá-los aqui, pois o Cubit geralmente recarrega o estado.
       await _apiService.put('/garden/plants/$plantId', updates);
-      print("GardenService: Plant $plantId updated successfully."); // Debug
     } catch (e) {
-      print("GardenService: Error updating plant $plantId - $e"); // Debug
       rethrow;
     }
   }

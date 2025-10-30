@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+
+// -- Features --
 import 'package:plante/features/plant_detail/models/plant_details_data.dart';
 import 'package:plante/features/plant_detail/models/plant_nutritional_data.dart';
 import 'package:plante/features/plant_detail/models/plant_health_data.dart';

@@ -27,9 +27,7 @@ class AppTheme {
       foregroundColor: Colors.white,
     ),
     navigationBarTheme: NavigationBarThemeData(
-      indicatorColor: _seedColor.withAlpha(
-        200,
-      ),
+      indicatorColor: _seedColor.withAlpha(200),
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>(
         (Set<WidgetState> states) => states.contains(WidgetState.selected)
             ? const TextStyle(fontWeight: FontWeight.bold)
@@ -58,8 +56,8 @@ class AppTheme {
       ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: _seedColor, // Mantém a cor semente no FAB escuro
-      foregroundColor: Colors.black87, // Ícone escuro no FAB verde
+      backgroundColor: _seedColor,
+      foregroundColor: Colors.black87,
     ),
     navigationBarTheme: NavigationBarThemeData(
       indicatorColor: _seedColor.withAlpha(300),
@@ -69,8 +67,5 @@ class AppTheme {
             : const TextStyle(),
       ),
     ),
-
-    // fontFamily: 'Roboto',
-    // textTheme: const TextTheme( ... ), // Pode definir cores de texto diferentes se necessário
   );
 }
