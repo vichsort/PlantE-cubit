@@ -9,7 +9,6 @@ import 'package:plante/core/utils/location_utils.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/plant_detail/cubit/plant_detail_state.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
-import 'package:plante/features/plant_detail/models/plant_complete_data.dart';
 
 class PlantDetailCubit extends Cubit<PlantDetailState> {
   final String userPlantId;
@@ -38,7 +37,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
 
     try {
       final plantData = await _gardenService.fetchPlantDetails(userPlantId);
-      emit(PlantDetailLoaded(plantData as PlantCompleteData));
+      emit(PlantDetailLoaded(plantData));
     } on ApiException catch (e) {
       emit(PlantDetailError(e.message));
     } catch (e) {
