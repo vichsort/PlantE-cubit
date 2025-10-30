@@ -7,11 +7,13 @@ import 'package:plante/features/profile/screens/profile_screen.dart';
 
 // -- Cubits --
 import 'package:plante/features/garden/cubit/garden_cubit.dart';
+import 'package:plante/features/profile/cubit/profile_cubit.dart'; // <<< Importar
+
+// -- Services --
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
-import 'package:plante/features/profile/cubit/profile_cubit.dart';
-import 'package:plante/features/profile/services/profile_service.dart';
-import 'package:plante/features/auth/cubit/auth_cubit.dart';
+import 'package:plante/features/profile/services/profile_service.dart'; // <<< Importar
+import 'package:plante/features/auth/cubit/auth_cubit.dart'; // <<< Importar
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -45,8 +47,10 @@ class _MainScreenState extends State<MainScreen> {
         child: const GardenScreen(),
       ),
       BlocProvider<ProfileCubit>(
-        create: (context) => ProfileCubit(context.read<ProfileService>()),
-        // TODO: Chamar cubit.loadProfile() aqui no futuro
+        create: (context) => ProfileCubit(
+          context.read<ProfileService>(), // Lê o serviço global
+          context.read<AuthCubit>(), // Lê o AuthCubit global
+        )..loadProfile(), // <<< CHAMA A BUSCA INICIAL DE DADOS
         child: const ProfileScreen(),
       ),
     ];

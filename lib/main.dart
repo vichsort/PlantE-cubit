@@ -55,7 +55,8 @@ class MyApp extends StatelessWidget {
           BlocProvider<AuthCubit>(
             create: (context) {
               final authService = context.read<AuthService>();
-              return AuthCubit(authService)..checkAuthStatus();
+              final profileService = context.read<ProfileService>();
+              return AuthCubit(authService, profileService)..checkAuthStatus();
             },
             lazy: false,
           ),
