@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-// import 'package:flutter_bloc/flutter_bloc.dart';
 
-// telas --
-import 'presentation/splash_screen.dart';
-import 'presentation/main_screen.dart';
-import 'features/auth/screens/login_screen.dart';
-import 'features/auth/screens/register_screen.dart';
-import 'features/garden/screens/garden_screen.dart';
-import 'features/plant_detail/screens/plant_detail_screen.dart';
+// -- Screens --
+import 'package:plante/features/auth/screens/login_screen.dart';
+import 'package:plante/features/auth/screens/register_screen.dart';
+import 'package:plante/features/garden/screens/garden_screen.dart';
+import 'package:plante/presentation/main_screen.dart';
+import 'package:plante/features/plant_detail/screens/plant_detail_screen.dart';
+import 'package:plante/presentation/splash_screen.dart';
 
 class AppRouter {
   Route? onGenerateRoute(RouteSettings settings) {
@@ -28,9 +27,7 @@ class AppRouter {
       case '/main':
         return MaterialPageRoute(builder: (_) => const MainScreen());
 
-      case '/garden': // Nossa tela principal (Home)
-        // Aqui não precisamos passar argumentos, mas se o GardenCubit
-        // não for global, precisaríamos provê-lo.
+      case '/garden':
         return MaterialPageRoute(builder: (_) => const GardenScreen());
 
       case '/plant-detail':
@@ -38,22 +35,8 @@ class AppRouter {
         // Esperamos receber o 'userPlantId' (String UUID) como argumento.
         final arguments = settings.arguments;
         if (arguments is String) {
-          final plantId = arguments;
-          return MaterialPageRoute(
-            builder: (_) =>
-                // --- Exemplo de como prover um Cubit específico da tela ---
-                // BlocProvider(
-                //   // Cria uma NOVA instância do Cubit para ESTA tela/rota
-                //   create: (context) => PlantDetailCubit(
-                //     userPlantId: plantId,
-                //     // Passe o serviço necessário (pode vir do context.read se for global)
-                //     // gardenService: context.read<GardenService>()
-                //   )..fetchDetails(), // Chama fetchDetails() logo ao criar
-                PlantDetailScreen(), // Passa o ID para a tela
-            // ),
-          );
+          return MaterialPageRoute(builder: (_) => PlantDetailScreen());
         } else {
-          // Argumento inválido ou faltando para esta rota
           print(
             "Erro de Roteamento: Argumento inválido para /plant-detail. Esperado: String, Recebido: ${arguments.runtimeType}",
           );
@@ -67,7 +50,6 @@ class AppRouter {
     }
   }
 
-  /// Rota de fallback para erros ou rotas não encontradas.
   static Route<dynamic> _errorRoute({
     String message = 'Página não encontrada!',
   }) {

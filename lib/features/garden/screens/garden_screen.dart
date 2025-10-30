@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-// -- Cubit --
+// -- Cubits --
 import '../cubit/garden_cubit.dart';
 import '../cubit/garden_state.dart';
 
@@ -33,7 +33,7 @@ class _GardenScreenState extends State<GardenScreen> {
     // ter sido carregado. Verifique o estado para evitar recargas desnecessárias.
     final currentState = context.read<GardenCubit>().state;
     if (currentState is GardenInitial) {
-       context.read<GardenCubit>().loadGarden();
+      context.read<GardenCubit>().loadGarden();
     }
   }
 
@@ -69,36 +69,49 @@ class _GardenScreenState extends State<GardenScreen> {
                 context.read<GardenCubit>().deletePlant(plant.id);
               },
             ),
-             ListTile(
+            ListTile(
               leading: const Icon(Icons.edit_outlined),
               title: const Text('Editar Apelido'),
               onTap: () {
-                 Navigator.of(sheetContext).pop();
-                 // TODO: Implementar edição de apelido (Dialog ou Navegação)
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Funcionalidade Editar Apelido ainda não implementada.'))
-                 );
+                Navigator.of(sheetContext).pop();
+                // TODO: Implementar edição de apelido (Dialog ou Navegação)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Funcionalidade Editar Apelido ainda não implementada.',
+                    ),
+                  ),
+                );
               },
             ),
-             ListTile(
-               leading: Icon(
-                 plant.isTrackedForWatering ? Icons.notifications_off_outlined : Icons.notifications_active_outlined,
-               ),
-               title: Text(plant.isTrackedForWatering ? 'Desativar Lembretes' : 'Ativar Lembretes'),
-               onTap: () {
-                 Navigator.of(sheetContext).pop();
-                 // TODO: Chamar função no GardenCubit para POST/DELETE /track-watering
-                 ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Funcionalidade Lembretes ainda não implementada no Cubit.'))
-                 );
-               },
-             ),
+            ListTile(
+              leading: Icon(
+                plant.isTrackedForWatering
+                    ? Icons.notifications_off_outlined
+                    : Icons.notifications_active_outlined,
+              ),
+              title: Text(
+                plant.isTrackedForWatering
+                    ? 'Desativar Lembretes'
+                    : 'Ativar Lembretes',
+              ),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                // TODO: Chamar função no GardenCubit para POST/DELETE /track-watering
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Funcionalidade Lembretes ainda não implementada no Cubit.',
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         );
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -116,10 +129,7 @@ class _GardenScreenState extends State<GardenScreen> {
       body: Column(
         children: [
           // --- BARRA DE PESQUISA ---
-          CustomSearchBar(
-            controller: _searchController,
-            onChanged: (value) {},
-          ),
+          CustomSearchBar(controller: _searchController, onChanged: (value) {}),
 
           // --- CONTEÚDO PRINCIPAL ---
           Expanded(
@@ -136,25 +146,32 @@ class _GardenScreenState extends State<GardenScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error_outline, color: colorScheme.error, size: 48),
+                          Icon(
+                            Icons.error_outline,
+                            color: colorScheme.error,
+                            size: 48,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Ops! Não foi possível carregar seu jardim.',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.titleMedium,
                           ),
-                           const SizedBox(height: 8),
-                           Text(
+                          const SizedBox(height: 8),
+                          Text(
                             state.message,
                             textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
                             icon: const Icon(Icons.refresh),
                             label: const Text('Tentar Novamente'),
-                            onPressed: () => context.read<GardenCubit>().loadGarden(),
-                          )
+                            onPressed: () =>
+                                context.read<GardenCubit>().loadGarden(),
+                          ),
                         ],
                       ),
                     ),
@@ -163,59 +180,76 @@ class _GardenScreenState extends State<GardenScreen> {
 
                 if (state is GardenEmpty) {
                   return Center(
-                     child: Padding(
-                       padding: const EdgeInsets.all(32.0),
-                       child: Column(
-                         mainAxisAlignment: MainAxisAlignment.center,
-                         children: [
-                            Icon(Icons.grass, size: 64, color: colorScheme.secondary),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Seu jardim está um pouco vazio...',
-                              style: theme.textTheme.titleLarge,
-                              textAlign: TextAlign.center,
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.grass,
+                            size: 64,
+                            color: colorScheme.secondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Seu jardim está um pouco vazio...',
+                            style: theme.textTheme.titleLarge,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Clique no botão + para identificar sua primeira planta!',
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                            const SizedBox(height: 8),
-                             Text(
-                              'Clique no botão + para identificar sua primeira planta!',
-                              textAlign: TextAlign.center,
-                               style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                            ),
-                         ],
-                       ),
-                     ),
-                   );
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 if (state is GardenLoaded) {
-                  if (state.filteredPlants.isEmpty && state.searchTerm.isNotEmpty) {
+                  if (state.filteredPlants.isEmpty &&
+                      state.searchTerm.isNotEmpty) {
                     return Center(
-                       child: Padding(
-                         padding: const EdgeInsets.all(32.0),
-                         child: Text(
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Text(
                           'Nenhuma planta encontrada para "${state.searchTerm}".',
-                           textAlign: TextAlign.center,
-                           style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                       ),
+                      ),
                     );
                   }
 
                   return GridView.builder(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 80.0),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16.0,
-                      mainAxisSpacing: 16.0,
-                      childAspectRatio: 0.70,
+                    padding: const EdgeInsets.only(
+                      left: 16.0,
+                      right: 16.0,
+                      top: 8.0,
+                      bottom: 80.0,
                     ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16.0,
+                          mainAxisSpacing: 16.0,
+                          childAspectRatio: 0.70,
+                        ),
                     itemCount: state.filteredPlants.length,
                     itemBuilder: (context, index) {
                       final plant = state.filteredPlants[index];
                       return PlantCard(
                         plant: plant,
                         onTap: () {
-                          Navigator.of(context).pushNamed('/plant-detail', arguments: plant.id);
+                          Navigator.of(
+                            context,
+                          ).pushNamed('/plant-detail', arguments: plant.id);
                         },
                         onMoreOptionsTap: () {
                           _showPlantOptions(context, plant);
