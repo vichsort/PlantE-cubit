@@ -1,71 +1,91 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'plant_detail_state.dart';
-import '../../../core/error/api_exception.dart';
-import '../../garden/services/garden_service.dart';
+
+// -- Core --
+import 'package:plante/core/error/api_exception.dart';
+import 'package:plante/core/utils/location_utils.dart';
+
+// -- Features --
+import 'package:plante/features/garden/services/garden_service.dart';
+import 'package:plante/features/plant_detail/cubit/plant_detail_state.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
+import 'package:plante/features/plant_detail/models/plant_complete_data.dart';
 
 class PlantDetailCubit extends Cubit<PlantDetailState> {
-  final String _userPlantId;
+  final String userPlantId;
   final GardenService _gardenService;
+  // ignore: unused_field
   final IdentificationService _identificationService;
+  final LocationService _locationService;
   final ImagePicker _imagePicker = ImagePicker();
 
   PlantDetailCubit({
-    required String userPlantId,
+    required this.userPlantId,
     required GardenService gardenService,
     required IdentificationService identificationService,
-  }) : _userPlantId = userPlantId,
-       _gardenService = gardenService,
+    required LocationService locationService,
+  }) : _gardenService = gardenService,
        _identificationService = identificationService,
+       _locationService = locationService,
        super(PlantDetailInitial());
 
-  /// Busca os dados completos da planta na API
+  /// Busca os dados completos da planta na API (GET /plants/[id])
   Future<void> fetchDetails() async {
-    emit(PlantDetailLoading());
+    if (state is PlantDetailLoading) return;
+    if (state is! PlantDetailLoaded) {
+      emit(PlantDetailLoading());
+    }
+
     try {
-      final plantData = await _gardenService.fetchPlantDetails(_userPlantId);
-      // emit(PlantDetailLoaded(plantData));
+      final plantData = await _gardenService.fetchPlantDetails(userPlantId);
+      emit(PlantDetailLoaded(plantData as PlantCompleteData));
     } on ApiException catch (e) {
       emit(PlantDetailError(e.message));
     } catch (e) {
-      emit(
-        PlantDetailError(
-          "Erro inesperado ao carregar detalhes: ${e.toString()}",
-        ),
-      );
+      emit(PlantDetailError("Erro inesperado: ${e.toString()}"));
     }
   }
 
   /// Dispara a análise profunda (Gemini Details + Nutritional)
   Future<void> triggerDeepAnalysis() async {
-    if (state is! PlantDetailLoaded)
-      return; // Só funciona se já tiver carregado
+    if (state is! PlantDetailLoaded) return;
     final currentState = state as PlantDetailLoaded;
+    if (currentState.isAnalyzingDetails) return;
 
-    // Mostra loading no botão específico
-    emit(currentState.copyWith(isAnalyzingDetails: true));
+    emit(
+      currentState.copyWith(
+        isAnalyzingDetails: true,
+        clearInfoMessage: true,
+        clearErrorMessage: true,
+      ),
+    );
+
     try {
-      // TODO: Chamar o serviço que chama POST /analyze-deep
-      // await _gardenService.triggerDeepAnalysis(_userPlantId);
+      // TODO: Criar 'triggerDeepAnalysis' no GardenService
+      // await _gardenService.triggerDeepAnalysis(userPlantId);
+      print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-deep");
+      await Future.delayed(const Duration(seconds: 1)); // Simulação
 
-      // Simulação de espera
-      await Future.delayed(const Duration(seconds: 2));
-      print("TODO: Chamar API POST /analyze-deep para $_userPlantId");
-
-      // Após sucesso, recarrega os dados para obter has_details = true
-      await fetchDetails(); // O fetchDetails emitirá o novo PlantDetailLoaded
-
-      // (Opcional) Mostrar SnackBar de "processando"
-      // O ideal é o worker notificar via Push quando estiver pronto
+      emit(
+        currentState.copyWith(
+          isAnalyzingDetails: false,
+          infoMessage: "Análise profunda solicitada! Você será notificado.",
+        ),
+      );
     } on ApiException catch (e) {
-      emit(PlantDetailError(e.message)); // Mostra erro
+      emit(
+        currentState.copyWith(
+          isAnalyzingDetails: false,
+          errorMessage: e.message,
+        ),
+      );
     } catch (e) {
-      emit(PlantDetailError("Erro inesperado: ${e.toString()}"));
-    }
-    // Garante que o loading do botão pare, mesmo se fetchDetails falhar
-    if (state is PlantDetailLoaded) {
-      emit((state as PlantDetailLoaded).copyWith(isAnalyzingDetails: false));
+      emit(
+        currentState.copyWith(
+          isAnalyzingDetails: false,
+          errorMessage: "Erro inesperado: ${e.toString()}",
+        ),
+      );
     }
   }
 
@@ -73,39 +93,68 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
   Future<void> triggerHealthAnalysis() async {
     if (state is! PlantDetailLoaded) return;
     final currentState = state as PlantDetailLoaded;
+    if (currentState.isAnalyzingHealth) return;
 
     try {
-      // 1. Pedir nova foto ao usuário
       final XFile? imageFile = await _imagePicker.pickImage(
-        source: ImageSource.camera, // Ou galeria
+        source: ImageSource.camera,
         imageQuality: 80,
         maxWidth: 1024,
       );
       if (imageFile == null) return; // Usuário cancelou
 
-      // 2. Mostrar loading no botão
-      emit(currentState.copyWith(isAnalyzingHealth: true));
+      emit(
+        currentState.copyWith(
+          isAnalyzingHealth: true,
+          clearInfoMessage: true,
+          clearErrorMessage: true,
+        ),
+      );
 
-      // TODO: Chamar o serviço que chama POST /analyze-health
-      // (Este serviço precisará do LocationService e ImageUtils)
-      // await _gardenService.triggerHealthAnalysis(_userPlantId, File(imageFile.path));
+      // Pega a localização
+      final location = await _locationService.getCurrentLocation();
+      print("Cubit: Localização obtida: $location");
 
-      // Simulação de espera
-      await Future.delayed(const Duration(seconds: 2));
-      print("TODO: Chamar API POST /analyze-health para $_userPlantId");
+      // Chama o serviço
+      // TODO: Criar 'analyzeHealth' no IdentificationService
+      // await _identificationService.analyzeHealth(
+      //   userPlantId,
+      //   File(imageFile.path),
+      //   location
+      // );
+      print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-health");
+      await Future.delayed(const Duration(seconds: 1)); // Simulação
 
-      // 3. Recarregar os dados
-      await fetchDetails();
-
-      // (Opcional) Mostrar SnackBar "processando"
+      emit(
+        currentState.copyWith(
+          isAnalyzingHealth: false,
+          infoMessage: "Análise de saúde solicitada! Você será notificado.",
+        ),
+      );
     } on ApiException catch (e) {
-      emit(PlantDetailError(e.message));
+      emit(
+        currentState.copyWith(
+          isAnalyzingHealth: false,
+          errorMessage: e.message,
+        ),
+      );
     } catch (e) {
-      emit(PlantDetailError("Erro inesperado: ${e.toString()}"));
+      emit(
+        currentState.copyWith(
+          isAnalyzingHealth: false,
+          errorMessage: "Erro inesperado: ${e.toString()}",
+        ),
+      );
     }
-    // Garante que o loading do botão pare
+  }
+
+  /// Limpa as mensagens de SnackBar (chamado pela UI após exibir)
+  void clearMessages() {
     if (state is PlantDetailLoaded) {
-      emit((state as PlantDetailLoaded).copyWith(isAnalyzingHealth: false));
+      final currentState = state as PlantDetailLoaded;
+      emit(
+        currentState.copyWith(clearInfoMessage: true, clearErrorMessage: true),
+      );
     }
   }
 }

@@ -3,7 +3,7 @@ import 'package:plante/features/plant_detail/models/plant_details_data.dart';
 import 'package:plante/features/plant_detail/models/plant_nutritional_data.dart';
 import 'package:plante/features/plant_detail/models/plant_health_data.dart';
 
-class PlantFullData extends Equatable {
+class PlantCompleteData extends Equatable {
   final String id;
   final String? nickname;
   final DateTime addedAt;
@@ -16,7 +16,7 @@ class PlantFullData extends Equatable {
   final PlantNutritionalData? nutritional;
   final PlantHealthData? health;
 
-  const PlantFullData({
+  const PlantCompleteData({
     required this.id,
     this.nickname,
     required this.addedAt,
@@ -36,8 +36,8 @@ class PlantFullData extends Equatable {
   bool get hasNutritional => nutritional != null;
   bool get hasHealthInfo => health != null;
 
-  factory PlantFullData.fromJson(Map<String, dynamic> json) {
-    return PlantFullData(
+  factory PlantCompleteData.fromJson(Map<String, dynamic> json) {
+    return PlantCompleteData(
       id: json['id'] as String,
       nickname: json['nickname'] as String?,
       addedAt: DateTime.parse(json['added_at'] as String),
