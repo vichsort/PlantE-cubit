@@ -21,9 +21,11 @@ final AuthService authService = AuthService(apiService, secureStorageService);
 final AppRouter appRouter = AppRouter();
 final GardenService gardenService = GardenService(apiService);
 final ProfileService profileService = ProfileService(apiService);
+final LocationService locationService = LocationService();
+// 2. Passe a instância única para o IdentificationService
 final IdentificationService identificationService = IdentificationService(
   apiService,
-  LocationService(),
+  locationService, // <-- Passe a instância
 );
 
 void main() async {
@@ -50,6 +52,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider.value(value: gardenService),
         RepositoryProvider.value(value: identificationService),
         RepositoryProvider.value(value: profileService),
+        RepositoryProvider.value(value: locationService),
       ],
       child: MultiBlocProvider(
         providers: [
