@@ -1,6 +1,5 @@
-import '../../../core/network/api_service.dart';
-
 // -- Core --
+import 'package:plante/core/network/api_service.dart';
 import 'package:plante/core/error/api_exception.dart';
 
 // -- Models --

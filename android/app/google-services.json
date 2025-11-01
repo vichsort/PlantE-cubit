@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340678158393",
+    "project_id": "plante-app-fde8e",
+    "storage_bucket": "plante-app-fde8e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340678158393:android:ae7b9e28d5ae696d60c5e8",
+        "android_client_info": {
+          "package_name": "com.example.plante"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9JXisX9ja2t3g0ZDp5K-uQY27-dyOpuk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
