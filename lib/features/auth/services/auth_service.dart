@@ -91,4 +91,17 @@ class AuthService {
     }
     return token;
   }
+
+  Future<void> sendFcmToken(String token) async {
+    try {
+      print("AuthService: Enviando FCM token para o backend...");
+      await _apiService.post('/auth/fcm-token', {'fcm_token': token});
+      print("AuthService: FCM token enviado com sucesso.");
+    } catch (e) {
+      // Falha ao enviar o token (ex: 401 se a sessão expirou bem na hora)
+      // O ApiService já cuidará de chamar o logout global se for 401
+      print("AuthService: Falha ao enviar FCM token - $e");
+      // Não re-lança o erro, pois não queremos que o app pare por isso.
+    }
+  }
 }

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+// -- FCM --
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
 // -- Core --
 import 'package:plante/core/network/api_service.dart';
 import 'package:plante/core/storage/secure_storage_service.dart';
 import 'package:plante/core/utils/location_utils.dart';
 import 'package:plante/app_theme.dart';
 import 'package:plante/app_router.dart';
+import 'core/utils/notification_utils.dart';
 
 //-- Features --
 import 'package:plante/features/auth/cubit/auth_cubit.dart';
@@ -28,15 +33,27 @@ final IdentificationService identificationService = IdentificationService(
   locationService,
 );
 
+late final NotificationUtil notificationUtil; // 'late final'
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
   // Chave do navigator, nos permite controlar a navegação globalmente
   final _navigatorKey = GlobalKey<NavigatorState>();
+
+  MyApp({Key? key}) : super(key: key) {
+    // Inicializa o notificationUtil aqui, passando as dependências globais
+    notificationUtil = NotificationUtil(
+      authService: authService, // Passa o serviço de auth
+      navigatorKey: _navigatorKey, // Passa a chave do navigator
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +66,7 @@ class MyApp extends StatelessWidget {
         RepositoryProvider.value(value: identificationService),
         RepositoryProvider.value(value: locationService),
         RepositoryProvider.value(value: profileService),
+        RepositoryProvider.value(value: notificationUtil),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -85,6 +103,7 @@ class MyApp extends StatelessWidget {
                 } else if (state is Authenticated) {
                   // Se o estado for 'Authenticated' (após login ou na verificação inicial)
                   // Navega para /main (MainScreen) e REMOVE a tela de login/splash da pilha.
+                  context.read<NotificationUtil>().initialize();
                   navigator.pushNamedAndRemoveUntil('/main', (route) => false);
                 }
               },
