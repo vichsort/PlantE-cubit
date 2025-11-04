@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:plante/features/auth/services/auth_service.dart'; // Para enviar o token
+import 'package:plante/features/auth/services/auth_service.dart';
 
 class NotificationUtil {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  // ignore: unused_field
   final AuthService _authService;
   final GlobalKey<NavigatorState> _navigatorKey;
 
@@ -15,59 +14,91 @@ class NotificationUtil {
   }) : _authService = authService,
        _navigatorKey = navigatorKey;
 
-  /// Inicializa todo o sistema de notificações.
-  /// Chame isso *após* o usuário estar autenticado.
   Future<void> initialize() async {
-    // 1. Pedir permissão ao usuário (iOS e Android 13+)
+    // Pedir permissão ao usuário
     NotificationSettings settings = await _fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,
+      provisional: false,
     );
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized) {
       print('NotificationUtil: Permissão concedida pelo usuário.');
 
-      // 2. Configurar os listeners (o que fazer ao receber/tocar)
+      // Configurar os listeners (o que fazer ao receber/tocar)
       _setupListeners();
 
-      // 3. Pegar o token e enviar ao backend
+      // Pegar o token e enviar ao backend
       await _getAndSendToken();
 
-      // 4. Lidar com token refresh
-      _fcm.onTokenRefresh.listen((newToken) {
-        _sendTokenToBackend(newToken); // Envia o novo token automaticamente
-      });
+      // Lidar com token refresh
+      _fcm.onTokenRefresh.listen(_sendTokenToBackend);
 
-      // 5. Checar se o app foi aberto por uma notificação (estado Terminado)
+      // Checar se o app foi aberto por uma notificação (estado Terminado)
       await handleInitialMessage();
     } else {
       print('NotificationUtil: Permissão negada pelo usuário.');
     }
   }
 
-  /// Configura os listeners para mensagens em primeiro e segundo plano
+  // Configura os listeners para mensagens em primeiro e segundo plano
   void _setupListeners() {
-    // A. App em PRIMEIRO PLANO (Foreground)
+    // em primeiro plano
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('FCM: Mensagem recebida em PRIMEIRO PLANO!');
-      if (message.notification != null) {
-        print(
-          'Mensagem: ${message.notification!.title} - ${message.notification!.body}',
+      final notification = message.notification;
+
+      // Tenta pegar o contexto atual do navegador
+      final context = _navigatorKey.currentContext;
+
+      if (notification != null && context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  notification.title ?? 'Nova Notificação',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                if (notification.body != null)
+                  Text(
+                    notification.body!,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+              ],
+            ),
+            backgroundColor: Colors.green[700],
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            action: SnackBarAction(
+              label: 'Ver',
+              textColor: Colors.white,
+              onPressed: () {
+                _handleNotificationNavigation(message.data);
+              },
+            ),
+          ),
         );
-        // TODO: Mostrar um SnackBar ou Dialog customizado
-        // (Ex: usando um StreamController para o 'main.dart' ouvir e mostrar)
       }
     });
 
-    // B. App em SEGUNDO PLANO (Background) e usuário TOCA na notificação
+    // segundo plano
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('FCM: App aberto pela notificação (Background): ${message.data}');
       _handleNotificationNavigation(message.data);
     });
   }
 
-  /// Pega o token FCM atual e o envia para o backend Flask
+  // Pega o token FCM atual e o envia para o backend Flask
   Future<void> _getAndSendToken() async {
     try {
       String? token = await _fcm.getToken();
@@ -82,19 +113,16 @@ class NotificationUtil {
     }
   }
 
-  /// Função auxiliar para enviar o token (reutilizável)
+  // Função auxiliar para enviar o token
   Future<void> _sendTokenToBackend(String token) async {
     try {
-      // TODO: Este método precisa ser criado no AuthService
-      // await _authService.sendFcmToken(token);
-      print("FCM: (Simulação) Token enviado ao backend com sucesso.");
+      await _authService.sendFcmToken(token);
     } catch (e) {
       print("FCM: Falha ao enviar token ao backend: $e");
-      // (Não re-lança o erro, pois não é crítico para o app parar)
     }
   }
 
-  /// Verifica se o app foi aberto do estado TERMINADO por uma notificação
+  // Verifica se o app foi aberto do estado TERMINADO por uma notificação
   Future<void> handleInitialMessage() async {
     RemoteMessage? initialMessage = await _fcm.getInitialMessage();
 
@@ -102,34 +130,42 @@ class NotificationUtil {
       print(
         'FCM: App aberto pela notificação (Terminado): ${initialMessage.data}',
       );
-      // Adiciona um pequeno delay para garantir que a UI de navegação esteja pronta
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Adiciona um pequeno delay para garantir que a UI de navegação (MainScreen)
+      // esteja 100% pronta antes de tentar navegar.
+      await Future.delayed(const Duration(milliseconds: 1000));
       _handleNotificationNavigation(initialMessage.data);
     }
   }
 
-  /// Lógica central de navegação baseada no payload 'data' da notificação
+  // Lógica central de navegação baseada no payload 'data' da notificação
   void _handleNotificationNavigation(Map<String, dynamic> data) {
-    // O backend DEVE enviar um payload 'data' assim:
-    // "data": {
+    // Aqui lemos o payload 'data' que o nosso worker Celery enviou:
+    // data={
     //   "navigation_type": "plant_detail",
-    //   "plant_id": "uuid-da-planta-aqui"
+    //   "plant_id": "uuid-da-planta"
     // }
 
     final String? type = data['navigation_type'];
-    final String? plantId =
-        data['plant_id']; // Nosso backend precisa enviar isso
+    final String? plantId = data['plant_id'];
 
     if (type == 'plant_detail' && plantId != null) {
       print("FCM Navigating: Indo para /plant-detail com ID: $plantId");
-      // Usa a GlobalKey do Navigator para navegar de qualquer lugar!
+
       _navigatorKey.currentState?.pushNamed(
         '/plant-detail',
-        arguments: plantId,
+        arguments: plantId, // Passa o ID da planta para a rota
       );
-    } else {
-      print("FCM Navigating: Payload de navegação desconhecido ou incompleto.");
-      // Fallback: Apenas vai para a tela principal
+    }
+    // --- Adicionar outros tipos de navegação aqui no futuro ---
+    // else if (type == 'profile_achievement') {
+    //   _navigatorKey.currentState?.pushNamed('/profile', arguments: ...);
+    // }
+    // ----------------------------------------------------
+    else {
+      print(
+        "FCM Navigating: Payload de navegação desconhecido ou incompleto: $data",
+      );
+      // Fallback: Apenas vai para a tela principal (se não estivermos lá)
       _navigatorKey.currentState?.pushNamedAndRemoveUntil(
         '/main',
         (route) => false,
