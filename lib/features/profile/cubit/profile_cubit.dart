@@ -1,8 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+// -- Core --
 import 'package:plante/core/error/api_exception.dart';
+
+// -- Cubits e services --
 import 'package:plante/features/auth/cubit/auth_cubit.dart';
-import 'package:plante/features/profile/services/profile_service.dart';
+import 'package:plante/features/auth/cubit/auth_state.dart';
 import 'package:plante/features/profile/cubit/profile_state.dart';
+import 'package:plante/features/profile/services/profile_service.dart';
 
 class ProfileCubit extends Cubit<ProfileState> {
   final ProfileService _profileService;
@@ -10,10 +15,9 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   ProfileCubit(this._profileService, this._authCubit) : super(ProfileInitial());
 
-  // Busca os dados do perfil do usuário logado (GET /profile/me)
+  // Busca os dados do perfil (para o primeiro carregamento da tela)
   Future<void> loadProfile() async {
     if (state is ProfileLoading) return;
-
     emit(ProfileLoading());
     try {
       final userProfile = await _profileService.fetchProfile();
@@ -29,6 +33,39 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
+  // Atualiza os dados do perfil do usuário (bio, país, estado)
+  Future<void> updateProfile(Map<String, dynamic> updates) async {
+    if (state is! ProfileLoaded) return;
+    final currentProfile = (state as ProfileLoaded).profile;
+
+    emit(ProfileUpdating(currentProfile));
+    try {
+      // Chama o serviço que chama PUT /profile/me
+      await _profileService.updateProfile(updates);
+      await _authCubit.checkAuthStatus();
+
+      // Emite um estado de sucesso local para o SnackBar
+      emit(
+        ProfileUpdateSuccess(
+          (_authCubit.state as Authenticated).user,
+          "Perfil atualizado com sucesso!",
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 50));
+      emit(ProfileIdle((_authCubit.state as Authenticated).user));
+    } on ApiException catch (e) {
+      emit(ProfileUpdateFailure(currentProfile, e.message));
+    } catch (e) {
+      emit(
+        ProfileUpdateFailure(
+          currentProfile,
+          "Erro inesperado ao atualizar: ${e.toString()}",
+        ),
+      );
+    }
+  }
+
   // Atualiza o status do usuário para Premium (TESTE)
   Future<void> upgradeToPremium() async {
     if (state is! ProfileLoaded) return;
@@ -36,17 +73,19 @@ class ProfileCubit extends Cubit<ProfileState> {
 
     emit(ProfileUpdating(currentProfile));
     try {
-      // TODO: Chamar o serviço que chama POST /auth/upgrade-to-premium
-      // await _profileService.upgradeToPremium();
-      print("SIMULANDO: Upgrade para Premium");
-      await Future.delayed(const Duration(seconds: 1)); // Simulação de API
+      await _profileService.upgradeToPremium();
+      await _authCubit.checkAuthStatus();
 
-      // Recarrega o perfil para obter o novo status
-      await loadProfile();
-      // Após o loadProfile, o estado será ProfileIdle (com dados atualizados)
-      // Poderíamos emitir ProfileUpdateSuccess, mas recarregar é mais robusto
+      emit(
+        ProfileUpdateSuccess(
+          (_authCubit.state as Authenticated).user,
+          "Assinatura Premium ativada!",
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 50));
+      emit(ProfileIdle((_authCubit.state as Authenticated).user));
     } on ApiException catch (e) {
-      emit(ProfileUpdateFailure(currentProfile, e.message)); // Emite falha
+      emit(ProfileUpdateFailure(currentProfile, e.message));
     } catch (e) {
       emit(
         ProfileUpdateFailure(
@@ -57,20 +96,24 @@ class ProfileCubit extends Cubit<ProfileState> {
     }
   }
 
-  /// Reverte o status do usuário para Free (TESTE)
+  // Reverte o status do usuário para Free (TESTE)
   Future<void> revertToFree() async {
     if (state is! ProfileLoaded) return;
     final currentProfile = (state as ProfileLoaded).profile;
 
-    emit(ProfileUpdating(currentProfile)); // Mostra loading no botão
+    emit(ProfileUpdating(currentProfile));
     try {
-      // TODO: Chamar o serviço que chama POST /auth/revert-to-free
-      // await _profileService.revertToFree();
-      print("SIMULANDO: Revertendo para Free");
-      await Future.delayed(const Duration(seconds: 1)); // Simulação de API
+      await _profileService.revertToFree();
+      await _authCubit.checkAuthStatus();
 
-      // Recarrega o perfil para obter o novo status
-      await loadProfile();
+      emit(
+        ProfileUpdateSuccess(
+          (_authCubit.state as Authenticated).user,
+          "Assinatura revertida para Gratuito.",
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 50));
+      emit(ProfileIdle((_authCubit.state as Authenticated).user));
     } on ApiException catch (e) {
       emit(ProfileUpdateFailure(currentProfile, e.message));
     } catch (e) {

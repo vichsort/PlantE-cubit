@@ -31,21 +31,9 @@ class ProfileService {
   }
 
   // Atualiza os dados do perfil do usuário (endpoint: PUT /profile/me).
-  Future<UserProfile> updateProfile(Map<String, dynamic> updates) async {
+  Future<void> updateProfile(Map<String, dynamic> updates) async {
     try {
-      final dynamic responseData = await _apiService.put(
-        '/profile/me',
-        updates,
-      );
-
-      if (responseData is Map<String, dynamic>) {
-        final updatedProfile = UserProfile.fromJson(responseData);
-        return updatedProfile;
-      } else {
-        throw Exception(
-          "Formato de dados inesperado após atualização do perfil.",
-        );
-      }
+      await _apiService.put('/profile/me', updates);
     } catch (e) {
       rethrow;
     }
@@ -53,7 +41,6 @@ class ProfileService {
 
   Future<String> upgradeToPremium() async {
     try {
-      print("ProfileService: Upgrading to Premium...");
       final response = await _apiService.post('/auth/upgrade-to-premium', {});
       return response['subscription_status'] as String;
     } on ApiException {
@@ -65,7 +52,6 @@ class ProfileService {
 
   Future<String> revertToFree() async {
     try {
-      print("ProfileService: Reverting to Free...");
       final response = await _apiService.post('/auth/revert-to-free', {});
       return response['subscription_status'] as String;
     } on ApiException {
