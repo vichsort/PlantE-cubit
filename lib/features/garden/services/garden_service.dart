@@ -97,4 +97,14 @@ class GardenService {
       rethrow;
     }
   }
+
+  Future<void> triggerDeepAnalysis(String plantId) async {
+    try {
+      print("GardenService: Disparando /analyze-deep para $plantId");
+      await _apiService.post('/garden/plants/$plantId/analyze-deep', {});
+    } catch (e) {
+      print("GardenService: Erro ao disparar analyze-deep - $e");
+      rethrow;
+    }
+  }
 }

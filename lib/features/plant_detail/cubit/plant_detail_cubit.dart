@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 // -- Core --
 import 'package:plante/core/error/api_exception.dart';
@@ -60,10 +61,12 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
     );
 
     try {
-      // TODO: Criar 'triggerDeepAnalysis' no GardenService
-      // await _gardenService.triggerDeepAnalysis(userPlantId);
-      print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-deep");
-      await Future.delayed(const Duration(seconds: 1));
+      // --- REMOVE A SIMULAÇÃO ---
+      // print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-deep");
+      // await Future.delayed(const Duration(seconds: 1));
+
+      // --- CHAMA O SERVIÇO REAL ---
+      await _gardenService.triggerDeepAnalysis(userPlantId);
 
       emit(
         currentState.copyWith(
@@ -75,7 +78,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
       emit(
         currentState.copyWith(
           isAnalyzingDetails: false,
-          errorMessage: e.message,
+          errorMessage: e.message, // Ex: "Limite diário atingido"
         ),
       );
     } catch (e) {
@@ -88,7 +91,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
     }
   }
 
-  // health
+  /// Dispara a análise de saúde (Plant.id Health + Gemini Treatment)
   Future<void> triggerHealthAnalysis() async {
     if (state is! PlantDetailLoaded) return;
     final currentState = state as PlantDetailLoaded;
@@ -96,11 +99,11 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
 
     try {
       final XFile? imageFile = await _imagePicker.pickImage(
-        source: ImageSource.camera,
+        source: ImageSource.camera, // Ou galeria
         imageQuality: 80,
         maxWidth: 1024,
       );
-      if (imageFile == null) return;
+      if (imageFile == null) return; // Usuário cancelou
 
       emit(
         currentState.copyWith(
@@ -114,15 +117,16 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
       final location = await _locationService.getCurrentLocation();
       print("Cubit: Localização obtida: $location");
 
-      // Chama o serviço
-      // TODO: Criar 'analyzeHealth' no IdentificationService
-      // await _identificationService.analyzeHealth(
-      //   userPlantId,
-      //   File(imageFile.path),
-      //   location
-      // );
-      print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-health");
-      await Future.delayed(const Duration(seconds: 1));
+      // --- REMOVE A SIMULAÇÃO ---
+      // print("SIMULANDO: Chamando API POST /plants/$userPlantId/analyze-health");
+      // await Future.delayed(const Duration(seconds: 1));
+
+      // --- CHAMA O SERVIÇO REAL ---
+      await _identificationService.analyzeHealth(
+        userPlantId,
+        File(imageFile.path),
+        location,
+      );
 
       emit(
         currentState.copyWith(
@@ -134,7 +138,7 @@ class PlantDetailCubit extends Cubit<PlantDetailState> {
       emit(
         currentState.copyWith(
           isAnalyzingHealth: false,
-          errorMessage: e.message,
+          errorMessage: e.message, // Ex: "Limite diário atingido"
         ),
       );
     } catch (e) {

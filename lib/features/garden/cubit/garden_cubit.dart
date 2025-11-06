@@ -3,15 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 
 // -- Core --
-import 'package:plante/features/garden/cubit/garden_state.dart';
 import 'package:plante/core/error/api_exception.dart';
 
-// -- Cubits e Services --
+// -- Features --
+import 'package:plante/features/garden/cubit/garden_state.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
 import 'package:plante/features/auth/cubit/auth_cubit.dart';
-
-// -- Models --
 import 'package:plante/features/garden/models/plant_summary.dart';
 
 class GardenCubit extends Cubit<GardenState> {
@@ -25,9 +23,8 @@ class GardenCubit extends Cubit<GardenState> {
   GardenCubit(this._gardenService, this._identificationService, this._authCubit)
     : super(GardenInitial());
 
-  // Carrega a lista inicial de plantas do jardim.
-  Future<void> loadGarden() async {
-    if (state is GardenLoading) return;
+  Future<void> loadGarden({bool force = false}) async {
+    if (state is GardenLoading && !force) return;
 
     emit(GardenLoading());
     try {
@@ -40,12 +37,9 @@ class GardenCubit extends Cubit<GardenState> {
         emit(GardenLoaded(allPlants: plants, filteredPlants: plants));
       }
     } on ApiException catch (e) {
-      // --- 4. A LÓGICA MÁGICA ---
       if (e.statusCode == 401) {
-        // Token inválido! A sessão morreu.
         _authCubit.logout();
       } else {
-        // Outro erro de API (ex: 500, 404)
         emit(GardenError(e.message));
       }
     } catch (e) {
@@ -87,6 +81,7 @@ class GardenCubit extends Cubit<GardenState> {
     }
   }
 
+  // Identifica uma nova planta e adiciona ao "Jardim"
   Future<void> identifyNewPlant(ImageSource source) async {
     emit(GardenLoading());
     try {
@@ -98,12 +93,16 @@ class GardenCubit extends Cubit<GardenState> {
 
       if (pickedFile != null) {
         await _identificationService.identifyPlant(File(pickedFile.path));
-        await loadGarden();
+        await loadGarden(force: true);
       } else {
-        await loadGarden();
+        await loadGarden(force: true);
       }
     } on ApiException catch (e) {
-      emit(GardenError("Falha ao identificar planta: ${e.message}"));
+      if (e.statusCode == 401) {
+        _authCubit.logout();
+      } else {
+        emit(GardenError("Falha ao identificar planta: ${e.message}"));
+      }
     } catch (e) {
       emit(
         GardenError("Erro inesperado ao identificar planta: ${e.toString()}"),
@@ -111,20 +110,24 @@ class GardenCubit extends Cubit<GardenState> {
     }
   }
 
-  // Deleta uma planta do jardim do usuário.
+  // Retira uma planta da listagem do jardim
   Future<void> deletePlant(String plantId) async {
     emit(GardenLoading());
     try {
       await _gardenService.deletePlant(plantId);
-      await loadGarden();
+      await loadGarden(force: true);
     } on ApiException catch (e) {
-      emit(GardenError("Falha ao remover planta: ${e.message}"));
+      if (e.statusCode == 401) {
+        _authCubit.logout();
+      } else {
+        emit(GardenError("Falha ao remover planta: ${e.message}"));
+      }
     } catch (e) {
       emit(GardenError("Erro inesperado ao remover planta: ${e.toString()}"));
     }
   }
 
-  // Ativa o monitoramento de rega para uma planta.
+  // adiciona a planta atual na track de pedidos de rega
   Future<void> trackWatering(String plantId) async {
     if (state is! GardenLoaded) {
       return;
@@ -137,30 +140,37 @@ class GardenCubit extends Cubit<GardenState> {
         (plant) => plant.copyWith(isTrackedForWatering: true),
       );
     } on ApiException catch (e) {
-      emit(GardenError("Falha ao ativar lembretes: ${e.message}"));
+      if (e.statusCode == 401) {
+        _authCubit.logout();
+      } else {
+        emit(GardenError("Falha ao ativar lembretes: ${e.message}"));
+      }
     } catch (e) {
       emit(GardenError("Erro inesperado: ${e.toString()}"));
     }
   }
 
-  // Desativa o monitoramento de rega para uma planta.
+  // retira a planta atual da track de pedidos de rega
   Future<void> untrackWatering(String plantId) async {
     if (state is! GardenLoaded) return;
     try {
       await _gardenService.untrackWatering(plantId);
-      // Atualiza a lista localmente
       _updatePlantInState(
         plantId,
         (plant) => plant.copyWith(isTrackedForWatering: false),
       );
     } on ApiException catch (e) {
-      emit(GardenError("Falha ao desativar lembretes: ${e.message}"));
+      if (e.statusCode == 401) {
+        _authCubit.logout();
+      } else {
+        emit(GardenError("Falha ao desativar lembretes: ${e.message}"));
+      }
     } catch (e) {
       emit(GardenError("Erro inesperado: ${e.toString()}"));
     }
   }
 
-  // Função auxiliar para atualizar uma única planta no estado atual
+  // muda dados da planta
   void _updatePlantInState(
     String plantId,
     PlantSummary Function(PlantSummary) updateFn,
@@ -168,12 +178,10 @@ class GardenCubit extends Cubit<GardenState> {
     if (state is! GardenLoaded) return;
     final currentState = state as GardenLoaded;
 
-    // Atualiza a lista interna
     _internalAllPlants = _internalAllPlants.map((plant) {
       return plant.id == plantId ? updateFn(plant) : plant;
     }).toList();
 
-    // Atualiza a lista filtrada visível
     final updatedFilteredPlants = currentState.filteredPlants.map((plant) {
       return plant.id == plantId ? updateFn(plant) : plant;
     }).toList();

@@ -28,4 +28,26 @@ class IdentificationService {
       rethrow;
     }
   }
+
+  Future<void> analyzeHealth(
+    String plantId,
+    File imageFile,
+    Map<String, double> location,
+  ) async {
+    try {
+      print("IdentificationService: Disparando /analyze-health para $plantId");
+      final imageBase64 = await imageFileToBase64(imageFile);
+
+      final payload = {
+        'image': imageBase64,
+        'latitude': location['latitude'],
+        'longitude': location['longitude'],
+      };
+
+      await _apiService.post('/garden/plants/$plantId/analyze-health', payload);
+    } catch (e) {
+      print("IdentificationService: Erro ao disparar analyze-health - $e");
+      rethrow;
+    }
+  }
 }
