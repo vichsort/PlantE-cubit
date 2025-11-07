@@ -6,6 +6,7 @@ import 'package:plante/core/utils/location_utils.dart';
 
 // -- Cubits e services --
 import 'package:plante/features/plant_detail/cubit/plant_detail_cubit.dart';
+import 'features/auth/cubit/auth_cubit.dart';
 import 'package:plante/features/garden/services/garden_service.dart';
 import 'package:plante/features/garden/services/identification_service.dart';
 
@@ -13,8 +14,10 @@ import 'package:plante/features/garden/services/identification_service.dart';
 import 'package:plante/features/auth/screens/login_screen.dart';
 import 'package:plante/features/auth/screens/register_screen.dart';
 import 'package:plante/features/garden/screens/garden_screen.dart';
-import 'package:plante/presentation/main_screen.dart';
 import 'package:plante/features/plant_detail/screens/plant_detail_screen.dart';
+
+// -- Presentation --
+import 'package:plante/presentation/main_screen.dart';
 import 'package:plante/presentation/splash_screen.dart';
 
 class AppRouter {
@@ -46,6 +49,7 @@ class AppRouter {
                 gardenService: context.read<GardenService>(),
                 identificationService: context.read<IdentificationService>(),
                 locationService: context.read<LocationService>(),
+                authCubit: context.read<AuthCubit>(),
               )..fetchDetails(),
               child: const PlantDetailScreen(),
             ),

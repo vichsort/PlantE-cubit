@@ -8,7 +8,7 @@ import 'package:plante/core/error/api_exception.dart';
 class ApiService {
   // --- CONFIGURAÇÃO ---
   final String _baseUrl =
-      'http://ec2-18-216-88-26.us-east-2.compute.amazonaws.com/api/v1';
+      'http://ec2-18-218-129-148.us-east-2.compute.amazonaws.com/api/v1';
 
   String? _token; // Armazena o token JWT
 

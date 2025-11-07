@@ -1,3 +1,4 @@
+// lib/features/plant_detail/screens/plant_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -12,8 +13,28 @@ import 'package:plante/features/plant_detail/models/plant_details_data.dart';
 import 'package:plante/features/plant_detail/models/plant_nutritional_data.dart';
 import 'package:plante/features/plant_detail/models/plant_health_data.dart';
 
-class PlantDetailScreen extends StatelessWidget {
+class PlantDetailScreen extends StatefulWidget {
   const PlantDetailScreen({super.key});
+
+  @override
+  State<PlantDetailScreen> createState() => _PlantDetailScreenState();
+}
+
+class _PlantDetailScreenState extends State<PlantDetailScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +62,6 @@ class PlantDetailScreen extends StatelessWidget {
             }
           }
         },
-
         builder: (context, state) {
           if (state is PlantDetailInitial || state is PlantDetailLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -79,13 +99,7 @@ class PlantDetailScreen extends StatelessWidget {
 
           if (state is PlantDetailLoaded) {
             final plant = state.plant;
-            // Usamos um Stack para ter conteúdo rolável e botões fixos
-            return Stack(
-              children: [
-                _buildScrollableContent(context, plant),
-                _buildFixedBottomButtons(context, state),
-              ],
-            );
+            return _buildScrollableContent(context, plant, state);
           }
 
           return const Center(child: Text('Estado desconhecido.'));
@@ -94,216 +108,464 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // Constrói o conteúdo principal da tela que pode ser rolado
   Widget _buildScrollableContent(
     BuildContext context,
     PlantCompleteData plant,
+    PlantDetailLoaded state,
   ) {
     final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
 
-    // CustomScrollView permite a AppBar "encolher" com a imagem
     return CustomScrollView(
       slivers: [
-        // AppBar com a Imagem
         SliverAppBar(
           expandedHeight: 300.0,
           floating: false,
           pinned: true,
           flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              plant.displayName, // Usa o helper (nickname ou nome científico)
-              style: const TextStyle(
-                shadows: [Shadow(blurRadius: 10, color: Colors.black87)],
-              ),
-            ),
             background:
                 (plant.primaryImageUrl != null &&
                     plant.primaryImageUrl!.isNotEmpty)
                 ? Image.network(
                     plant.primaryImageUrl!,
                     fit: BoxFit.cover,
-                    // Feedback de loading para a imagem da appbar
                     loadingBuilder: (context, child, progress) =>
                         progress == null
                         ? child
                         : Container(color: Colors.grey[800]),
                     errorBuilder: (context, error, stack) =>
-                        _buildImagePlaceholder(), // Placeholder em caso de erro
+                        _buildImagePlaceholder(),
                   )
-                : _buildImagePlaceholder(), // Placeholder se não houver imagem
+                : _buildImagePlaceholder(),
           ),
         ),
-
-        // O resto das informações como uma lista
         SliverToBoxAdapter(
-          child: Padding(
-            // Padding na base para não ficar atrás dos botões fixos
-            padding: const EdgeInsets.all(16.0).copyWith(bottom: 120.0),
+          child: Container(
+            color: theme.colorScheme.surface,
+            padding: const EdgeInsets.fromLTRB(24.0, 24.0, 24.0, 16.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Card: Informações do Jardim
-                _buildInfoCard(
-                  context: context,
-                  title: 'Minhas Informações',
+                Row(
                   children: [
-                    _infoRow(
-                      context,
-                      icon: Icons.label_outline,
-                      title: 'Apelido',
-                      value: plant.nickname ?? '(Nenhum)',
+                    Expanded(
+                      child: Text(
+                        plant.nickname ?? plant.scientificName,
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
                     ),
-                    _infoRow(
-                      context,
-                      icon: Icons.science_outlined,
-                      title: 'Nome Científico',
-                      value: plant.scientificName,
-                    ),
-                    _infoRow(
-                      context,
-                      icon: Icons.calendar_today_outlined,
-                      title: 'Adicionada em',
-                      value: DateFormat('dd/MM/yyyy').format(plant.addedAt),
-                    ),
-                    _infoRow(
-                      context,
-                      icon: Icons.water_drop_outlined,
-                      title: 'Última Rega',
-                      value: plant.lastWatered != null
-                          ? DateFormat(
-                              'dd/MM/yyyy \'às\' HH:mm',
-                            ).format(plant.lastWatered!)
-                          : 'Nenhuma',
-                    ),
-                    _infoRow(
-                      context,
-                      icon: Icons.notifications_active_outlined,
-                      title: 'Lembretes de Rega',
-                      value: plant.trackedWatering ? 'Ativados' : 'Desativados',
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined),
+                      color: colorScheme.primary,
+                      onPressed: () => _showEditNicknameDialog(context, plant),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-
-                // Card: Notas de Cuidado
-                _buildInfoCard(
-                  context: context,
-                  title: 'Minhas Notas de Cuidado',
-                  children: [
-                    Text(
-                      plant.careNotes != null && plant.careNotes!.isNotEmpty
-                          ? plant.careNotes!
-                          : 'Nenhuma nota de cuidado adicionada.',
-                      style: textTheme.bodyMedium?.copyWith(height: 1.5),
+                if (plant.nickname != null)
+                  Text(
+                    plant.scientificName,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
-                  ],
-                ),
-
-                // seção de Análise de Detalhes (do Gemini)
-                if (plant.hasDetails) ...[
-                  // Se 'details' não for nulo
-                  const SizedBox(height: 16),
-                  _buildGeminiDetailsCard(context, plant.details!),
-                ],
-
-                // Seção de Análise Nutricional (do Gemini)
-                if (plant.hasNutritional) ...[
-                  // Se 'nutritional' não for nulo
-                  const SizedBox(height: 16),
-                  _buildGeminiNutritionalCard(context, plant.nutritional!),
-                ],
-
-                // Seção de Análise de Saúde (do Gemini)
-                if (plant.hasHealthInfo) ...[
-                  // Se 'health' não for nulo
-                  const SizedBox(height: 16),
-                  _buildGeminiHealthCard(context, plant.health!),
-                ],
+                  ),
               ],
             ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              vertical: 16.0,
+              horizontal: 24.0,
+            ),
+            color: theme.colorScheme.surfaceContainerHighest,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _QuickActionButton(
+                  icon: Icons.water_drop_outlined,
+                  label: "Regar",
+                  onTap: () {
+                    _showAddLogDialog(
+                      context: context,
+                      plant: plant,
+                      logType: CareLogType.water,
+                    );
+                  },
+                  subtitle: plant.lastWatered != null
+                      ? 'Última: ${DateFormat('dd/MM').format(plant.lastWatered!)}'
+                      : 'Nenhuma rega',
+                ),
+                _QuickActionButton(
+                  icon: Icons.eco_outlined,
+                  label: "Adubar",
+                  onTap: () {
+                    _showAddLogDialog(
+                      context: context,
+                      plant: plant,
+                      logType: CareLogType.fertilizer,
+                    );
+                  },
+                  subtitle: "Próximo: 15/12", // TODO: Virá dos lembretes
+                ),
+                _QuickActionButton(
+                  icon: plant.trackedWatering
+                      ? Icons.notifications_active_outlined
+                      : Icons.notifications_off_outlined,
+                  label: "Lembretes",
+                  onTap: () {
+                    context.read<PlantDetailCubit>().toggleWateringTracking();
+                  },
+                  subtitle: plant.trackedWatering ? 'Ativos' : 'Inativos',
+                  highlight: plant.trackedWatering,
+                ),
+              ],
+            ),
+          ),
+        ),
+        SliverPersistentHeader(
+          delegate: _SliverTabBarDelegate(
+            TabBar(
+              controller: _tabController,
+              labelColor: colorScheme.primary,
+              unselectedLabelColor: colorScheme.onSurfaceVariant,
+              indicatorColor: colorScheme.primary,
+              tabs: const [
+                Tab(text: 'Guia'),
+                Tab(text: 'Saúde'),
+                Tab(text: 'Meu Diário'),
+              ],
+            ),
+          ),
+          pinned: true,
+        ),
+        SliverFillRemaining(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildGuideTab(context, plant, state),
+              _buildHealthTab(context, plant, state),
+              _buildDiaryTab(context, plant),
+            ],
           ),
         ),
       ],
     );
   }
 
-  /// Constrói os botões fixos no rodapé da tela
-  Widget _buildFixedBottomButtons(
+  Future<void> _showEditNicknameDialog(
     BuildContext context,
-    PlantDetailLoaded state,
-  ) {
+    PlantCompleteData plant,
+  ) async {
     final cubit = context.read<PlantDetailCubit>();
-    final plant = state.plant;
-    final theme = Theme.of(context);
+    final TextEditingController nicknameController = TextEditingController(
+      text: plant.nickname,
+    );
 
-    // O 'Positioned' ancora o contêiner no rodapé do Stack
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 24.0),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, -2),
+    return showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Editar Apelido'),
+          content: TextField(
+            controller: nicknameController,
+            decoration: const InputDecoration(
+              labelText: 'Apelido da Planta',
+              hintText: 'Ex: Minha Tomateira',
+            ),
+            maxLength: 30,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            FilledButton(
+              child: const Text('Salvar'),
+              onPressed: () {
+                final newNickname = nicknameController.text.trim();
+                cubit.updateNickname(newNickname);
+                Navigator.of(dialogContext).pop();
+              },
             ),
           ],
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
-        ),
-        child: Row(
-          children: [
-            // Inspecionar Saúde
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: state.isAnalyzingHealth
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.medical_services_outlined),
-                label: const Text('Saúde'),
-                // Desabilita se os dados já existem OU se está carregando
-                onPressed: (state.isAnalyzingHealth || plant.hasHealthInfo)
-                    ? null
-                    : () => cubit.triggerHealthAnalysis(),
-              ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditCareNotesDialog(
+    BuildContext context,
+    PlantCompleteData plant,
+  ) async {
+    final cubit = context.read<PlantDetailCubit>();
+    final TextEditingController notesController = TextEditingController(
+      text: plant.careNotes,
+    );
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Editar Notas de Cuidado'),
+          content: TextField(
+            controller: notesController,
+            decoration: const InputDecoration(
+              labelText: 'Notas',
+              hintText: 'Ex: Adubar a cada 2 meses...',
             ),
-            const SizedBox(width: 12),
-            // Mais Detalhes
-            Expanded(
-              child: ElevatedButton.icon(
-                icon: state.isAnalyzingDetails
+            maxLines: 5,
+            maxLength: 255,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            FilledButton(
+              child: const Text('Salvar'),
+              onPressed: () {
+                final newNotes = notesController.text.trim();
+                cubit.updateCareNotes(newNotes);
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showAddLogDialog({
+    required BuildContext context,
+    required PlantCompleteData plant,
+    required CareLogType logType,
+  }) async {
+    final cubit = context.read<PlantDetailCubit>();
+    final String title = logType == CareLogType.water
+        ? 'Registrar Rega'
+        : 'Registrar Adubação';
+    final String message =
+        'Você ${logType == CareLogType.water ? 'regou' : 'adubou'} "${plant.displayName}" agora?';
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(dialogContext).pop(),
+            ),
+            FilledButton(
+              child: const Text('Sim, registrar'),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+
+                if (logType == CareLogType.water) {
+                  cubit.updateLastWatered(DateTime.now());
+                } else {
+                  print("CHAMANDO CUBIT: addFertilizerLog (NÃO IMPLEMENTADO)");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Log de adubação ainda não implementado.'),
+                    ),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGuideTab(
+    BuildContext context,
+    PlantCompleteData plant,
+    PlantDetailLoaded state,
+  ) {
+    if (plant.hasDetails) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildGeminiDetailsCard(context, plant.details!),
+            if (plant.hasNutritional) ...[
+              const SizedBox(height: 16),
+              _buildGeminiNutritionalCard(context, plant.nutritional!),
+            ],
+          ],
+        ),
+      );
+    }
+    return _buildPremiumUnlockCard(
+      context: context,
+      title: 'Desbloquear Análise Profunda',
+      description:
+          'Obtenha detalhes sobre rega, luz, solo, usos medicinais, receitas e muito mais, fornecidos pelo Gemini AI.',
+      isLoading: state.isAnalyzingDetails,
+      onTap: () => context.read<PlantDetailCubit>().triggerDeepAnalysis(),
+    );
+  }
+
+  Widget _buildHealthTab(
+    BuildContext context,
+    PlantCompleteData plant,
+    PlantDetailLoaded state,
+  ) {
+    if (plant.hasHealthInfo) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: _buildGeminiHealthCard(context, plant.health!),
+      );
+    }
+    return _buildPremiumUnlockCard(
+      context: context,
+      title: 'Fazer Análise de Saúde',
+      description:
+          'Tire uma nova foto da sua planta para que nossa IA (Plant.id + Gemini) verifique sinais de doenças e gere um plano de tratamento.',
+      isLoading: state.isAnalyzingHealth,
+      onTap: () => context.read<PlantDetailCubit>().triggerHealthAnalysis(),
+    );
+  }
+
+  Widget _buildDiaryTab(BuildContext context, PlantCompleteData plant) {
+    final textTheme = Theme.of(context).textTheme;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          _buildInfoCard(
+            context: context,
+            title: 'Minhas Informações',
+            children: [
+              _infoRow(
+                context,
+                icon: Icons.calendar_today_outlined,
+                title: 'Adicionada em',
+                value: DateFormat('dd/MM/yyyy').format(plant.addedAt),
+              ),
+              _infoRow(
+                context,
+                icon: Icons.water_drop_outlined,
+                title: 'Última Rega',
+                value: plant.lastWatered != null
+                    ? DateFormat(
+                        'dd/MM/yyyy \'às\' HH:mm',
+                      ).format(plant.lastWatered!)
+                    : 'Nenhuma',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            context: context,
+            title: 'Minhas Notas de Cuidado',
+            trailing: IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              onPressed: () => _showEditCareNotesDialog(context, plant),
+              tooltip: 'Editar Notas',
+            ),
+            children: [
+              Text(
+                plant.careNotes != null && plant.careNotes!.isNotEmpty
+                    ? plant.careNotes!
+                    : 'Nenhuma nota de cuidado adicionada.',
+                style: textTheme.bodyMedium?.copyWith(height: 1.5),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _buildInfoCard(
+            context: context,
+            title: 'Histórico de Ações (Em breve)',
+            children: const [
+              ListTile(
+                title: Text('Regou a planta - 02/11/2025 (Dado Fixo)'),
+                leading: Icon(Icons.water_drop),
+              ),
+              ListTile(
+                title: Text('Adubou a planta - 28/10/2025 (Dado Fixo)'),
+                leading: Icon(Icons.eco),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumUnlockCard({
+    required BuildContext context,
+    required String title,
+    required String description,
+    required bool isLoading,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Card(
+        elevation: 0,
+        color: theme.colorScheme.surfaceContainerHighest,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 40,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                icon: isLoading
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.auto_stories_outlined),
-                label: const Text('Detalhes'),
-                // Desabilita se os dados já existem OU se está carregando
-                onPressed: (state.isAnalyzingDetails || plant.hasDetails)
-                    ? null
-                    : () => cubit.triggerDeepAnalysis(),
+                    : const Icon(Icons.auto_awesome),
+                label: const Text('Analisar Agora (1 uso)'),
+                onPressed: isLoading ? null : onTap,
                 style: ElevatedButton.styleFrom(
-                  // Estilo de destaque (opcional)
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   backgroundColor: theme.colorScheme.primary,
                   foregroundColor: theme.colorScheme.onPrimary,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // Placeholder padrão para a imagem
   Widget _buildImagePlaceholder() {
     return Container(
       color: Colors.grey[800],
@@ -317,6 +579,7 @@ class PlantDetailScreen extends StatelessWidget {
     required BuildContext context,
     required String title,
     required List<Widget> children,
+    Widget? trailing,
   }) {
     return Card(
       elevation: 0,
@@ -327,11 +590,19 @@ class PlantDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing,
+              ],
             ),
             const Divider(height: 24, thickness: 0.5),
             ...children,
@@ -341,7 +612,6 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // Uma linha genérica para pares de ícone-título-valor
   Widget _infoRow(
     BuildContext context, {
     required IconData icon,
@@ -371,14 +641,13 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // Card para iterar sobre os Detalhes do Gemini
   Widget _buildGeminiDetailsCard(
     BuildContext context,
     PlantDetailsData details,
   ) {
     return _buildInfoCard(
       context: context,
-      title: "Detalhes (Análise Profunda)",
+      title: "Guia da Planta",
       children: [
         _infoRow(
           context,
@@ -432,14 +701,13 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // Card para iterar sobre os Dados Nutricionais do Gemini
   Widget _buildGeminiNutritionalCard(
     BuildContext context,
     PlantNutritionalData nutritional,
   ) {
     return _buildInfoCard(
       context: context,
-      title: "Nutricional (Análise Profunda)",
+      title: "Usos e Nutrição",
       children: [
         _infoRow(
           context,
@@ -470,11 +738,10 @@ class PlantDetailScreen extends StatelessWidget {
     );
   }
 
-  // Card para iterar sobre os Dados de Saúde do Gemini
   Widget _buildGeminiHealthCard(BuildContext context, PlantHealthData health) {
     return _buildInfoCard(
       context: context,
-      title: "Plano de Saúde (Análise)",
+      title: "Plano de Saúde",
       children: [
         _infoRow(
           context,
@@ -502,5 +769,83 @@ class PlantDetailScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+enum CareLogType { water, fertilizer }
+
+class _QuickActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool highlight;
+
+  const _QuickActionButton({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+    this.highlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final color = highlight ? colorScheme.primary : colorScheme.onSurface;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8.0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
+  _SliverTabBarDelegate(this._tabBar);
+
+  final TabBar _tabBar;
+
+  @override
+  double get minExtent => _tabBar.preferredSize.height;
+  @override
+  double get maxExtent => _tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: _tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
+    return false;
   }
 }

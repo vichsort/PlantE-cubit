@@ -13,7 +13,6 @@ class IdentificationService {
 
   Future<dynamic> identifyPlant(File imageFile) async {
     try {
-      // Localização
       final locationData = await _locationService.getCurrentLocation();
 
       final imageBase64 = await imageFileToBase64(imageFile);

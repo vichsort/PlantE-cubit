@@ -84,4 +84,33 @@ class PlantCompleteData extends Equatable {
     nutritional,
     health,
   ];
+
+  PlantCompleteData copyWith({
+    String? id,
+    String? nickname,
+    DateTime? addedAt,
+    DateTime? lastWatered,
+    String? careNotes,
+    bool? trackedWatering,
+    String? primaryImageUrl,
+    String? scientificName,
+    PlantDetailsData? details,
+    PlantNutritionalData? nutritional,
+    PlantHealthData? health,
+  }) {
+    return PlantCompleteData(
+      id: id ?? this.id,
+      nickname: nickname ?? this.nickname,
+      addedAt: addedAt ?? this.addedAt,
+      lastWatered: lastWatered ?? this.lastWatered,
+      careNotes: careNotes ?? this.careNotes,
+      trackedWatering:
+          trackedWatering ?? this.trackedWatering, // <<< Agora existe
+      primaryImageUrl: primaryImageUrl ?? this.primaryImageUrl,
+      scientificName: scientificName ?? this.scientificName,
+      details: details ?? this.details,
+      nutritional: nutritional ?? this.nutritional,
+      health: health ?? this.health,
+    );
+  }
 }
